@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f6f5c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Contagem do Ensaio</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#eef4f1;color:#1d2b26;font-size:16px}
+  header{background:#1f6f5c;color:#ffffff;padding:14px 16px;position:sticky;top:0;z-index:5}
+  header h1{margin:0;font-size:18px}
+  header .sub{font-size:13px;opacity:.85}
+  .tabs{display:flex;gap:6px;margin-top:10px}
+  .tabs button{flex:1;border:0;border-radius:8px;padding:8px;background:rgba(255,255,255,.15);color:#fff;font-weight:600;cursor:pointer}
+  .tabs button.on{background:#fff;color:#1f6f5c}
+  main{max-width:760px;margin:0 auto;padding:12px 16px 120px}
+  .card{background:#ffffff;border:1px solid #d5e2dc;border-radius:12px;padding:14px;margin-bottom:12px}
+  .card h2{margin:0 0 10px;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:#5f716a}
+  .card h3{margin:16px 0 4px;font-size:14px;color:#1f6f5c}
+  .card h3:first-of-type{margin-top:0}
+  .hint{font-size:12px;color:#5f716a;margin:0 0 6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  label.f{display:block;font-size:13px;color:#5f716a;margin-bottom:4px}
+  select,input[type=text]{width:100%;padding:9px 10px;border:1px solid #d5e2dc;border-radius:8px;font-size:16px;background:#fff;color:#1d2b26}
+  .fam{display:flex;align-items:center;gap:8px;margin:14px 0 6px;font-weight:700;font-size:14px}
+  .fam:first-child{margin-top:0}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .famtot{margin-left:auto;font-weight:600;color:#5f716a;font-size:13px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #eef3f0}
+  .row.first{border-top:0}
+  .row .nm{font-size:15px}
+  .row .nm small{display:block;font-size:12px;color:#5f716a}
+  .row.has .nm{font-weight:700}
+  .ctr{display:flex;align-items:center;gap:6px;flex:none}
+  .ctr button{width:38px;height:38px;border-radius:50%;border:1px solid #d5e2dc;background:#f6faf8;font-size:20px;font-weight:700;color:#1f6f5c;cursor:pointer;line-height:1}
+  .ctr button:active{background:#1f6f5c;color:#fff}
+  .ctr input{width:54px;height:38px;text-align:center;font-size:17px;font-weight:700;border:1px solid #d5e2dc;border-radius:8px}
+  .det{padding:0 0 8px}
+  .det:empty{display:none}
+  .det .item{display:grid;gap:6px;background:#f4f8f6;border-radius:8px;padding:8px;margin-top:6px}
+  .det .item.two{grid-template-columns:1fr 1fr}
+  .det .item .lbl{font-size:12px;color:#5f716a;grid-column:1/-1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{background:#dff3ea;color:#145a45;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:600}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #d5e2dc;padding:10px 16px;display:flex;gap:10px;justify-content:center;z-index:5}
+  .bar button{flex:1;max-width:260px;padding:12px 6px;border:0;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;line-height:1.2}
+  .bar .mid{background:#fff;color:#1f6f5c;border:2px solid #1f6f5c}
+  .status{margin-top:10px;font-size:13px;color:#5f716a}
+  .status b{color:#1f6f5c}
+  .mini{border:0;background:#1f6f5c;color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fff1d6;color:#8a5a00;margin-left:4px;vertical-align:middle}
+  .primary{background:#1f6f5c;color:#fff}
+  .ghost{background:#eef4f1;color:#1d2b26}
+  .tot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tile{background:#f4f8f6;border-radius:10px;padding:10px;text-align:center}
+  .tile b{display:block;font-size:26px}
+  .tile span{font-size:12px;color:#5f716a}
+  .tile.big{grid-column:1/-1;background:#1f6f5c;color:#fff}
+  .tile.big span{color:#d9efe8}
+  .chartwrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .legend div{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px}
+  .legend b{margin-left:auto;padding-left:14px}
+  .meta{font-size:14px;color:#5f716a;margin-bottom:8px}
+  .list{font-size:14px;columns:2;column-gap:20px}
+  .list div{break-inside:avoid;padding:2px 0}
+  .plain{font-size:14px}
+  .plain div{padding:3px 0}
+  .plain .sec{font-weight:700;color:#1f6f5c;margin-top:8px}
+  .plain .sec:first-child{margin-top:0}
+  .hist table{width:100%;border-collapse:collapse;font-size:14px}
+  .hist th,.hist td{padding:8px 6px;border-bottom:1px solid #d5e2dc;text-align:left}
+  .hist th{color:#5f716a;font-weight:600;font-size:12px;text-transform:uppercase}
+  .hist td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .hist tr{cursor:pointer}
+  .msg{padding:10px;border-radius:8px;margin-bottom:10px;font-size:14px}
+  .msg.ok{background:#dff3ea;color:#145a45}
+  .msg.err{background:#fbe3e1;color:#8a2a22}
+  .hidden{display:none}
+  .inicio{display:inline-block;color:#fff;text-decoration:none;font-size:13px;font-weight:700;background:rgba(255,255,255,.18);border-radius:8px;padding:4px 10px;margin-right:10px;vertical-align:middle}
+  .share .sbtn{display:flex;align-items:center;gap:12px;width:100%;padding:14px;margin-top:8px;border-radius:12px;border:1px solid #d5e2dc;background:#fff;cursor:pointer;text-align:left;color:#1d2b26;font-size:16px}
+  .share .sbtn .ic{font-size:26px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#f4f8f6;flex:none}
+  .share .sbtn b{display:block}
+  .share .sbtn small{display:block;font-size:13px;color:#5f716a}
+  .share .sbtn.img{border-color:#25a244}
+  .share .sbtn.img .ic{background:#e3f6e8}
+  .share .sbtn:disabled{opacity:.6}
+  .modal .prev{width:100%;max-height:50vh;object-fit:contain;border-radius:8px;border:1px solid #d5e2dc;margin-bottom:8px;background:#f4f8f6}
+  .modal a.btnl{display:block;text-align:center;text-decoration:none;padding:13px;border-radius:10px;font-size:16px;font-weight:700}
+  .wpp{background:#25a244;color:#fff}
+  #shareView{position:fixed;inset:0;z-index:30;background:#eef4f1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 24px}
+  #shareView.hidden{display:none}
+  body.svAberto{overflow:hidden}
+  .svTop{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;background:#eef4f1;padding:12px 0;z-index:1}
+  .svTop b{font-size:18px}
+  .svX{border:1px solid #d5e2dc;background:#fff;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:700;cursor:pointer}
+  .svB{display:block;width:100%;max-width:560px;margin:0 auto 10px;padding:16px;border:0;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer}
+  #svImg{display:block;width:100%;max-width:560px;margin:6px auto 0;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.12);background:#fff}
+  .svDica{font-size:14px;color:#5f716a;text-align:center;margin:12px auto;max-width:560px}
+  .svDica.forte{color:#8a2a22;font-weight:700}
+  @media print{
+    @page{size:A4;margin:0}
+    body>*:not(#shareView){display:none!important}
+    #shareView{position:static;padding:0;background:#fff;overflow:visible}
+    #shareView .no{display:none!important}
+    #svImg{max-width:none;width:100%;border-radius:0;box-shadow:none;margin:0}
+  }
+  @media (max-width:420px){.tot{grid-template-columns:repeat(2,1fr)} .list{columns:1}}
+  .modal{position:fixed;inset:0;background:rgba(15,30,25,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+  .modal.hidden{display:none}
+  .modal .box{background:#fff;border-radius:16px;max-width:380px;width:100%;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .modal h3{margin:0 0 8px;font-size:18px}
+  .modal p{margin:0 0 10px;font-size:15px;color:#5f716a}
+  .modal ul{margin:0 0 14px;padding-left:18px;font-size:14px;max-height:180px;overflow:auto}
+  .modal ul:empty{display:none}
+  .modal .acoes{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .modal .acoes button{padding:13px;border:0;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
+  input.vazio,select.vazio{border-color:#d9534f;background:#fff5f4}
+</style>
+</head>
+<body>
+<header>
+  <h1><a class="inicio" href="./">← Início</a>Contagem do Ensaio</h1>
+  <div class="sub" id="hoje"></div>
+  <div class="tabs">
+    <button id="tabNovo" class="on" onclick="aba('novo')">Contagem</button>
+    <button id="tabRes" onclick="aba('res')">Resultado</button>
+    <button id="tabHist" onclick="aba('hist')">Histórico</button>
+  </div>
+</header>
+
+<main>
+  <!-- CONTAGEM -->
+  <section id="pgNovo">
+    <div class="card">
+      <h2>Dados do ensaio</h2>
+      <div class="grid2">
+        <div><label class="f">Localidade</label><select id="localidade"></select></div>
+        <div><label class="f">Tipo de ensaio</label><select id="tipo"></select></div>
+      </div>
+      <div style="margin-top:10px">
+        <label class="f">Data (automática)</label>
+        <input type="text" id="data" readonly>
+      </div>
+      <div class="status" id="status">Nova contagem</div>
+    </div>
+
+    <div class="card"><h2>Instrumentos</h2><div id="instrumentos"></div></div>
+    <div class="card"><h2>Organistas</h2><div id="organistas"></div></div>
+    <div class="card"><h2>Irmandade</h2><p class="hint">Irmãos e irmãs que não tocam</p><div id="irmandade"></div></div>
+    <div class="card">
+      <h2>Ministério</h2>
+      <h3>Ministério Local</h3><div id="minLocal"></div>
+      <h3>Ministério Visita</h3><div id="minVisita"></div>
+    </div>
+    <div class="card">
+      <h2>Visitantes – Localidades</h2>
+      <div id="visAuto"></div>
+      <div id="visitantes"></div>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="pgRes" class="hidden">
+    <div id="msg"></div>
+    <div class="card">
+      <div class="meta" id="resMeta"></div>
+      <div class="tot" id="resTot"></div>
+    </div>
+    <div class="card">
+      <h2>Instrumentos por família</h2>
+      <div class="chartwrap">
+        <svg id="donut" width="150" height="150" viewBox="0 0 42 42" role="img" aria-label="Gráfico por família"></svg>
+        <div class="legend" id="legend" style="flex:1;min-width:180px"></div>
+      </div>
+    </div>
+    <div class="card"><h2>Detalhe dos instrumentos</h2><div class="list" id="resLista"></div></div>
+    <div class="card"><h2>Ministério e visitas</h2><div class="plain" id="resMin"></div></div>
+    <div class="card share">
+      <h2>Compartilhar</h2>
+      <button class="sbtn img" onclick="compartilharImagem()">
+        <span class="ic">🖼️</span><span><b>Resultado</b><small>Imagem do resultado para o WhatsApp</small></span>
+      </button>
+      <button class="sbtn pdf" id="btnPdf" onclick="compartilharA4()">
+        <span class="ic">📄</span><span><b>Imprimir</b><small>Folha A4 para imprimir ou mandar no WhatsApp</small></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- HISTÓRICO -->
+  <section id="pgHist" class="hidden">
+    <div class="card hist"><h2>Ensaios salvos</h2><div id="histBox">Carregando…</div></div>
+  </section>
+</main>
+
+
+<div id="shareView" class="hidden"></div>
+
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true">
+  <div class="box">
+    <h3 id="mTitulo"></h3>
+    <p id="mTexto"></p>
+    <ul id="mLista"></ul>
+    <div class="acoes">
+      <button class="primary" id="mOk"></button>
+      <button class="ghost" id="mCancel"></button>
+    </div>
+  </div>
+</div>
+
+<div class="bar" id="barNovo">
+  <button class="ghost" onclick="limpar()">Limpar campos</button>
+  <button class="mid" id="btnAndamento" onclick="salvarAndamento()">Salvar em andamento</button>
+  <button class="primary" onclick="gerar()">Gerar resultado</button>
+</div>
+
+<script>
+/* ================= CONFIGURAÇÃO (edite aqui) ================= */
+const LOCALIDADES = ['Vila Rio Branco','Vila Diva','Água Rasa'];          // onde é o ensaio
+const TIPOS = ['GEM','Oficial','Santa Ceia','Extra'];
+
+const FAMILIAS = [
+  {id:'cordas',   nome:'Cordas',   hex:'#2a78c4', itens:['Violino','Viola','Violoncelo']},
+  {id:'madeiras', nome:'Madeiras', hex:'#c98a1b', itens:['Flauta','Oboé',"Oboé D'Amore",'Corne Inglês','Fagote','Clarinete','Clarinete Alto','Clarinete Baixo','Saxofone Soprano','Saxofone Alto','Saxofone Tenor','Saxofone Barítono','Saxofone Baixo']},
+  {id:'metais',   nome:'Metais',   hex:'#c2453d', itens:['Trompete','Cornet','Flugelhorn','Trompa','Trombonito','Trombone','Barítono','Eufônio','Tuba']},
+  {id:'teclas',   nome:'Teclas',   hex:'#7a52b3', itens:['Órgão','Acordeon']}
+];
+const ORGANISTAS = ['Organistas','Examinadoras'];
+const IRMANDADE  = ['Irmãos','Irmãs'];
+const MIN_LOCAL = [
+  {cargo:'Encarregado',      nomes:['Sergio','Nelson']},
+  {cargo:'Ancião',           nomes:['Diogo','Paulo']},
+  {cargo:'Diácono',          nomes:['Emerson']},
+  {cargo:'Coop. de Jovens',  nomes:['Brendon']},
+  {cargo:'Coop. de Adultos', nomes:['Gerson']}
+];
+const MIN_VISITA = ['Encarregado','Encarregado Regional','Ancião','Diácono','Coop. de Jovens','Coop. de Adultos'];
+/* ============================================================= */
+
+/* ---------- conexão com a planilha (Apps Script) ---------- */
+const API = 'https://script.google.com/macros/s/AKfycbxmqpq2dEQEWbVY7SkHI0_LJ1XvRMYQK0XsKsci98jdjskjP8OaOE5sVRGXk45j2v2AGQ/exec';
+const MODO_TESTE = /[?&]teste/.test(location.search);   /* ?teste = salva só neste navegador */
+const temGoogle = !MODO_TESTE;
+async function chamarApi(acao, dados){
+  let r;
+  try{
+    r = acao==='salvar'
+      ? await fetch(API, {method:'POST', credentials:'omit', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({acao, reg:dados})})
+      : await fetch(API+'?api='+acao+(dados?'&id='+encodeURIComponent(dados):''), {credentials:'omit'});
+  }catch(e){ throw new Error('Sem conexão com a internet. Confira o sinal e tente de novo.'); }
+  let j; try{ j = await r.json(); }catch(e){ throw new Error('A planilha não respondeu direito. Tente de novo.'); }
+  if(!j.ok) throw new Error(j.erro || 'Erro na planilha');
+  return j.dados;
+}
+/* mesmo jeito de chamar do Apps Script: servidor().withSuccessHandler(ok).withFailureHandler(err).funcao(x) */
+function servidor(){
+  let ok=()=>{}, err=()=>{};
+  const s = {
+    withSuccessHandler(f){ ok=f; return s; },
+    withFailureHandler(f){ err=f; return s; },
+    salvarEnsaio(reg){ chamarApi('salvar', reg).then(ok, err); },
+    listarEnsaios(){ chamarApi('listar').then(ok, err); },
+    obterEnsaio(id){ chamarApi('obter', id).then(ok, err); }
+  };
+  return s;
+}
+const INSTR = FAMILIAS.flatMap(f=>f.itens);
+const v = {};      // contagens  (chave -> número)
+const det = {};    // detalhes   (chave -> lista)
+const meta = {};   // chave -> {label, max, tipo}
+let ultimo = null;
+
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const opts = (lista, sel, vazio) => (vazio?`<option value="">${vazio}</option>`:'') +
+  lista.map(o=>`<option${o===sel?' selected':''}>${esc(o)}</option>`).join('');
+
+/* ---------- montagem ---------- */
+function linha(k, label, o={}){
+  v[k]=0; det[k]=[]; meta[k]={label, max:o.max, tipo:o.tipo};
+  return `<div class="row${o.first?' first':''}" data-row="${esc(k)}">
+      <span class="nm">${esc(label)}${o.sub?`<small>${esc(o.sub)}</small>`:''}</span>
+      <div class="ctr">
+        <button type="button" data-k="${esc(k)}" data-d="-1" aria-label="Menos">−</button>
+        <input inputmode="numeric" data-k="${esc(k)}" value="0">
+        <button type="button" data-k="${esc(k)}" data-d="1" aria-label="Mais">+</button>
+      </div></div>
+    ${o.tipo?`<div class="det" data-det="${esc(k)}"></div>`:''}`;
+}
+function montar(){
+  document.getElementById('localidade').innerHTML = opts(LOCALIDADES);
+  document.getElementById('tipo').innerHTML = opts(TIPOS);
+  document.getElementById('instrumentos').innerHTML = FAMILIAS.map(f =>
+    `<div class="fam"><span class="dot" style="background:${f.hex}"></span>${f.nome}<span class="famtot" data-fam="${f.id}">0</span></div>` +
+    f.itens.map((i,n)=>linha(i,i,{first:n===0})).join('')).join('');
+  document.getElementById('organistas').innerHTML = ORGANISTAS.map((i,n)=>linha(i,i,{first:n===0})).join('');
+  document.getElementById('irmandade').innerHTML  = IRMANDADE.map((i,n)=>linha(i,i,{first:n===0})).join('');
+  document.getElementById('minLocal').innerHTML = MIN_LOCAL.map((m,n)=>
+    linha('ML:'+m.cargo, m.cargo, {first:n===0, max:m.nomes.length, tipo:'local', sub:m.nomes.join(', ')})).join('');
+  document.getElementById('minVisita').innerHTML = MIN_VISITA.map((c,n)=>
+    linha('MV:'+c, c, {first:n===0, tipo:'visita'})).join('');
+  document.getElementById('visitantes').innerHTML = linha('Visitantes','Localidades',{first:true, tipo:'visitante'});
+
+  const d = new Date();
+  document.getElementById('data').value = d.toLocaleDateString('pt-BR');
+  document.getElementById('hoje').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+
+  const pg = document.getElementById('pgNovo');
+  pg.addEventListener('click', e=>{ const b=e.target.closest('button[data-k]'); if(b) definir(b.dataset.k, v[b.dataset.k]+Number(b.dataset.d)); });
+  pg.addEventListener('focusin', e=>{ if(e.target.matches('.ctr input')) e.target.select(); });
+  const aoDigitar = e=>{
+    const t=e.target;
+    if(t.matches('.ctr input')){ const n=parseInt(t.value.replace(/\D/g,''),10); definir(t.dataset.k, isNaN(n)?0:n, true); return; }
+    if(t.dataset.dk!=null){ sujo = true; if(t.value) t.classList.remove('vazio'); const lst=det[t.dataset.dk], i=+t.dataset.i;
+      if(t.dataset.f) lst[i] = {...(lst[i]||{}), [t.dataset.f]: t.value}; else lst[i]=t.value;
+      if(t.dataset.dk.startsWith('MV:')) atualizarVisAuto();
+      rascunhoLocal(); }
+  };
+  pg.addEventListener('input', aoDigitar);
+  pg.addEventListener('change', aoDigitar);
+}
+function definir(k, n, digitando){
+  n = Math.max(0, n|0);
+  if(meta[k].max!=null) n = Math.min(n, meta[k].max);
+  v[k]=n;
+  if(!carregando) sujo = true;
+  const row = document.querySelector(`[data-row="${CSS.escape(k)}"]`);
+  const inp = row.querySelector('input');
+  if(!digitando || String(n)!==inp.value) inp.value = n;
+  row.classList.toggle('has', n>0);
+  FAMILIAS.forEach(f => document.querySelector(`[data-fam="${f.id}"]`).textContent = f.itens.reduce((s,i)=>s+v[i],0));
+  if(meta[k].tipo) detalhes(k);
+  rascunhoLocal();
+}
+
+/* ---------- campos que abrem conforme a quantidade ---------- */
+function detalhes(k){
+  const box = document.querySelector(`[data-det="${CSS.escape(k)}"]`);
+  const n = v[k], tipo = meta[k].tipo, lst = det[k];
+  lst.length = Math.min(lst.length, n);
+  let h = '';
+  if(tipo==='local'){
+    const nomes = MIN_LOCAL.find(m=>'ML:'+m.cargo===k).nomes;
+    if(n>0 && n>=nomes.length){                       // todos presentes -> preenche sozinho
+      lst.splice(0, lst.length, ...nomes);
+      h = `<div class="chips">${nomes.map(x=>`<span class="chip">✓ ${esc(x)}</span>`).join('')}</div>`;
+    } else {
+      for(let i=0;i<n;i++){
+        if(!nomes.includes(lst[i])) lst[i]='';
+        h += `<div class="item"><select data-dk="${esc(k)}" data-i="${i}">${opts(nomes, lst[i], 'Quem está presente?')}</select></div>`;
+      }
+    }
+  }
+  if(tipo==='visita'){
+    for(let i=0;i<n;i++){
+      const e = lst[i] || (lst[i]={nome:'',local:''});
+      h += `<div class="item two"><span class="lbl">${esc(meta[k].label)} ${n>1?i+1:''}</span>
+        <input type="text" placeholder="Nome" value="${esc(e.nome)}" data-dk="${esc(k)}" data-i="${i}" data-f="nome">
+        <input type="text" placeholder="Localidade" value="${esc(e.local)}" data-dk="${esc(k)}" data-i="${i}" data-f="local"></div>`;
+    }
+  }
+  if(tipo==='visitante'){
+    for(let i=0;i<n;i++){
+      if(typeof lst[i]!=='string') lst[i]='';
+      h += `<div class="item"><input type="text" placeholder="Localidade ${n>1?i+1:''}" value="${esc(lst[i])}" data-dk="${esc(k)}" data-i="${i}"></div>`;
+    }
+  }
+  box.innerHTML = h;
+  if(tipo==='visita') atualizarVisAuto();
+}
+
+/* localidades do Ministério Visita, sem repetir */
+function locaisMinVisita(d){
+  return MIN_VISITA.flatMap(c=>(d['MV:'+c]||[]).map(e=>((e&&e.local)||'').trim())).filter(Boolean);
+}
+function unicos(lista){
+  const vistos = new Set();
+  return lista.filter(l=>{ const k=l.toLowerCase(); if(vistos.has(k)) return false; vistos.add(k); return true; });
+}
+function atualizarVisAuto(){
+  const locais = unicos(locaisMinVisita(det));
+  document.getElementById('visAuto').innerHTML = locais.length
+    ? `<div class="chips" style="margin-bottom:8px">${locais.map(l=>`<span class="chip">✓ ${esc(l)}</span>`).join('')}</div>` : '';
+}
+
+/* ---------- janela de aviso ---------- */
+function perguntar({titulo, texto='', lista=[], ok, cancelar}){
+  return new Promise(res=>{
+    const m=document.getElementById('modal');
+    document.getElementById('mTitulo').textContent=titulo;
+    document.getElementById('mTexto').textContent=texto;
+    document.getElementById('mLista').innerHTML=lista.map(l=>`<li>${esc(l)}</li>`).join('');
+    const bOk=document.getElementById('mOk'), bC=document.getElementById('mCancel');
+    bOk.textContent=ok; bC.textContent=cancelar;
+    const fim=r=>{ m.classList.add('hidden'); bOk.onclick=bC.onclick=m.onclick=null; res(r); };
+    bOk.onclick=()=>fim(true); bC.onclick=()=>fim(false);
+    m.onclick=e=>{ if(e.target===m) fim(null); };   // tocar fora = desistir
+    m.classList.remove('hidden');
+  });
+}
+
+async function limpar(){
+  const ok = await perguntar({titulo:'Limpar os campos?', texto:'Começa uma contagem nova. O que já foi salvo continua no Histórico.', ok:'Sim, limpar', cancelar:'Cancelar'});
+  if(!ok) return;
+  novaContagem();
+}
+function novaContagem(){
+  carregando = true;
+  Object.keys(v).forEach(k=>{det[k]=[];definir(k,0)});
+  carregando = false;
+  atualId = null; versaoBase = null; sujo = false;
+  document.getElementById('data').value = new Date().toLocaleDateString('pt-BR');
+  try{ localStorage.removeItem('rascunho'); }catch(e){}
+  mostrarStatus('Nova contagem');
+  window.scrollTo(0,0);
+}
+
+/* ---------- cálculo ---------- */
+function calcular(val){
+  const g = k => Number(val[k]||0);
+  const fam = FAMILIAS.map(f=>({...f,total:f.itens.reduce((s,i)=>s+g(i),0)}));
+  const instrumentos = fam.reduce((s,f)=>s+f.total,0);
+  const musicos = instrumentos - g('Órgão');               // o órgão é tocado por organista
+  const organistas = g('Organistas') + g('Examinadoras');
+  const minLocal  = MIN_LOCAL.reduce((s,m)=>s+g('ML:'+m.cargo),0);
+  const minVisita = MIN_VISITA.reduce((s,c)=>s+g('MV:'+c),0);
+  const irmandade = g('Irmãos') + g('Irmãs');
+  const visitantes = g('Visitantes');
+  return {fam, instrumentos, musicos, organistas, minLocal, minVisita, ministerio:minLocal+minVisita,
+          irmandade, visitantes, geral: musicos + organistas + minLocal + minVisita + irmandade};   // localidades visitantes não somam
+}
+
+/* ---------- textos para resultado e planilha ---------- */
+function textos(reg){
+  const val=reg.valores, d=reg.detalhes||{};
+  const local = MIN_LOCAL.filter(m=>val['ML:'+m.cargo]>0)
+    .map(m=>{ const n=(d['ML:'+m.cargo]||[]).filter(Boolean), q=Number(val['ML:'+m.cargo]);
+      return n.length ? `${m.cargo}: ${n.join(', ')}${q>n.length?` + ${q-n.length}`:''}` : `${m.cargo}: ${q}`; });
+  const visita = MIN_VISITA.filter(c=>val['MV:'+c]>0)
+    .flatMap(c=>{
+      const q=Number(val['MV:'+c]), lst=(d['MV:'+c]||[]).slice(0,q);
+      const cheios=lst.filter(e=>e&&((e.nome||'').trim()||(e.local||'').trim()))
+        .map(e=>`${c}: ${[(e.nome||'').trim(),(e.local||'').trim()].filter(Boolean).join(' – ')}`);
+      const sem=q-cheios.length;
+      return sem>0 ? cheios.concat(`${c}: ${sem}${cheios.length?' (sem nome)':''}`) : cheios;
+    });
+  const outros = (d['Visitantes']||[]).map(e=>(((e && typeof e==='object') ? e.local : e)||'').trim()).filter(Boolean);
+  const visit = unicos(locaisMinVisita(d).concat(outros));
+  return {local, visita, visit};
+}
+
+/* ---------- resultado ---------- */
+function mostrar(reg){
+  window._atual = reg;
+  const c = calcular(reg.valores), val = reg.valores, t = textos(reg);
+  document.getElementById('resMeta').innerHTML = `<b>${esc(reg.localidade)}</b> · Ensaio ${esc(reg.tipo)} · ${esc(reg.data)}`;
+  document.getElementById('resTot').innerHTML = [
+    ['Instrumentos',c.instrumentos],['Músicos',c.musicos],['Organistas',c.organistas],
+    ['Min. Local',c.minLocal],['Min. Visita',c.minVisita],['Irmandade',c.irmandade]
+  ].map(([t,n])=>`<div class="tile"><b>${n}</b><span>${t}</span></div>`).join('') +
+  `<div class="tile big"><b>${c.geral}</b><span>Total geral de participantes</span></div>`;
+
+  const r = 15.915; let off = 25, out = `<circle cx="21" cy="21" r="${r}" fill="none" stroke="#e6eeea" stroke-width="6"/>`;
+  c.fam.forEach(f=>{ if(!c.instrumentos||!f.total) return; const p=f.total/c.instrumentos*100;
+    out += `<circle cx="21" cy="21" r="${r}" fill="none" stroke="${f.hex}" stroke-width="6" stroke-dasharray="${p} ${100-p}" stroke-dashoffset="${off}"/>`; off-=p; });
+  out += `<text x="21" y="21" text-anchor="middle" font-size="7" font-weight="700" fill="#1d2b26">${c.instrumentos}</text>
+          <text x="21" y="26.5" text-anchor="middle" font-size="3" fill="#5f716a">instrumentos</text>`;
+  document.getElementById('donut').innerHTML = out;
+  document.getElementById('legend').innerHTML = c.fam.map(f=>{
+    const pct = c.instrumentos ? (f.total/c.instrumentos*100).toFixed(2).replace('.',',') : '0,00';
+    return `<div><span class="dot" style="background:${f.hex}"></span>${f.nome}<b>${f.total} · ${pct}%</b></div>`;
+  }).join('');
+
+  const lista = INSTR.filter(i=>Number(val[i])>0);
+  document.getElementById('resLista').innerHTML =
+    (lista.length ? lista.map(i=>`<div><b>${val[i]}</b> ${esc(i)}</div>`).join('') : '<div>Nenhum instrumento</div>') +
+    ORGANISTAS.filter(o=>val[o]>0).map(o=>`<div><b>${val[o]}</b> ${o}</div>`).join('');
+
+  const bloco = (titulo, linhas) => `<div class="sec">${titulo}</div>` +
+    (linhas.length ? linhas.map(l=>`<div>${esc(l)}</div>`).join('') : '<div>Nenhum</div>');
+  document.getElementById('resMin').innerHTML =
+    bloco(`Ministério Local (${c.minLocal})`, t.local) +
+    bloco(`Ministério Visita (${c.minVisita})`, t.visita) +
+    bloco(`Localidades visitantes`, t.visit);
+}
+
+
+/* ---------- contagem em andamento / edição ---------- */
+let atualId = null, carregando = false;
+let versaoBase = null, sujo = false;   /* versão da planilha que este celular tem / se mexeu desde a última sincronização */
+const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const hora = () => new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+function mostrarStatus(html){ document.getElementById('status').innerHTML = html; }
+
+function montarRegistro(status){
+  const reg = {
+    data: document.getElementById('data').value,
+    localidade: document.getElementById('localidade').value,
+    tipo: document.getElementById('tipo').value,
+    valores: {...v},
+    detalhes: JSON.parse(JSON.stringify(det))
+  };
+  if(!atualId) atualId = novoId();
+  reg.id = atualId; reg.status = status; reg.baseVersao = versaoBase;
+  const c = calcular(reg.valores), t = textos(reg);
+  reg.totais = {instrumentos:c.instrumentos, musicos:c.musicos, organistas:c.organistas, ministerio:c.ministerio,
+                irmandade:c.irmandade, geral:c.geral};
+
+  // colunas da planilha (cabeçalho + valor), na ordem
+  const col = [['Data',reg.data],['Localidade',reg.localidade],['Tipo',reg.tipo]];
+  INSTR.concat(ORGANISTAS, IRMANDADE).forEach(k=>col.push([k, v[k]]));
+  MIN_LOCAL.forEach(m=>col.push(['Min. Local – '+m.cargo, v['ML:'+m.cargo]]));
+  col.push(['Min. Local – Nomes', t.local.join(' | ')]);
+  MIN_VISITA.forEach(cg=>col.push(['Min. Visita – '+cg, v['MV:'+cg]]));
+  col.push(['Min. Visita – Nomes', t.visita.join(' | ')]);
+  col.push(['Localidades visitantes', t.visit.join(' | ')]);
+  c.fam.forEach(f=>col.push([f.nome, f.total]));
+  [['Total Instrumentos',c.instrumentos],['Total Músicos',c.musicos],['Total Organistas',c.organistas],
+   ['Total Ministério',c.ministerio],['Total Irmandade',c.irmandade],['Total Geral',c.geral]]
+   .forEach(x=>col.push(x));
+  reg.colunas = col;
+  return reg;
+}
+
+function rascunhoLocal(){
+  if(carregando) return;
+  try{ const r=montarRegistro('Em andamento'); r.sujo=sujo; localStorage.setItem('rascunho', JSON.stringify(r)); }catch(e){}
+}
+
+function salvarAndamento(forcar){
+  const reg = montarRegistro('Em andamento');
+  if(forcar===true) reg.forcar = true;
+  const btn = document.getElementById('btnAndamento');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  salvar(reg,
+    res=>{ btn.disabled=false; btn.textContent='Salvar em andamento';
+          if(res && res.conflito){ tratarConflito(res.atual, ()=>salvarAndamento(true)); return; }
+          if(res && res.emAndamento){ jaEmAndamento(res.atual); return; }
+          versaoBase = (res && res.versao) || versaoBase; sujo = false; rascunhoLocal();
+          mostrarStatus(`<b>✓ Salvo em andamento às ${hora()}</b> – os outros celulares nesta contagem recebem a atualização.`); },
+    e =>{ btn.disabled=false; btn.textContent='Salvar em andamento';
+          perguntar({titulo:'Não foi possível salvar', texto:(e&&e.message)||String(e), ok:'OK', cancelar:'Fechar'}); });
+}
+
+/* coloca um registro salvo de volta na tela de contagem */
+function carregarNoFormulario(reg, op={}){
+  carregando = true;
+  const selL = document.getElementById('localidade'), selT = document.getElementById('tipo');
+  [[selL,reg.localidade],[selT,reg.tipo]].forEach(([sel,val])=>{
+    if(val && ![...sel.options].some(o=>o.value===val)) sel.insertAdjacentHTML('beforeend',`<option>${esc(val)}</option>`);
+    if(val) sel.value = val;
+  });
+  document.getElementById('data').value = reg.data || new Date().toLocaleDateString('pt-BR');
+  Object.keys(v).forEach(k=>{
+    det[k] = JSON.parse(JSON.stringify((reg.detalhes||{})[k] || []));
+    definir(k, Number((reg.valores||{})[k]) || 0);
+  });
+  atualizarVisAuto();
+  carregando = false;
+  atualId = reg.id || novoId();
+  versaoBase = reg.versao || reg.baseVersao || null;
+  sujo = !!op.manterSujo && !!reg.sujo;
+  mostrarStatus(op.msg || `Continuando a contagem de <b>${esc(reg.data)}</b> <span class="badge">em andamento</span>`);
+  rascunhoLocal();
+  if(!op.ficarNaAba) aba('novo');
+  checarAtualizacao();
+}
+
+/* ---------- vários celulares na mesma contagem ---------- */
+function tratarConflito(atual, refazer){
+  if(atual.status==='Finalizado'){
+    perguntar({titulo:'Esta contagem já foi finalizada', texto:'Outra pessoa gerou o resultado em outro celular. Ela não pode mais ser alterada.', ok:'Ver o resultado', cancelar:'Fechar'})
+      .then(ok=>{ novaContagem(); if(ok){ mostrar(atual); document.getElementById('msg').innerHTML=''; aba('res'); } });
+    return;
+  }
+  perguntar({titulo:'Outra pessoa salvou antes', texto:`Esta contagem foi atualizada em outro celular às ${atual.horaVersao||''}. O que você quer fazer?`,
+             ok:'Puxar a versão mais nova', cancelar:'Salvar a minha por cima'})
+    .then(ok=>{
+      if(ok===null) return;
+      if(ok) carregarNoFormulario(atual, {msg:`🔄 Versão mais nova carregada (salva às ${atual.horaVersao||''}).`});
+      else refazer();
+    });
+}
+
+/* outra pessoa já salvou uma contagem em andamento neste dia: não deixa criar outra, abre a que existe */
+function jaEmAndamento(atual){
+  const h = atual.horaVersao ? ' (às '+atual.horaVersao+')' : '';
+  mostrarStatus(`⚠️ <b>Já está em andamento</b> uma contagem de ${esc(atual.data||'')}. Verifique o Histórico.`);
+  perguntar({titulo:'Já está em andamento',
+             texto:`Outra pessoa já salvou a contagem de ${atual.data||'hoje'}${h}. Não dá para salvar outra no mesmo dia enquanto ela não for finalizada. Vamos abrir a que está em andamento – o que você digitou aqui será descartado.`,
+             ok:'Abrir a contagem em andamento', cancelar:'Ver o Histórico'})
+    .then(ok=>{
+      if(ok===null) return;
+      if(ok) carregarNoFormulario(atual, {msg:`📂 Abrimos a contagem em andamento de <b>${esc(atual.data||'')}</b>${esc(h)}. Continue por aqui.`});
+      else aba('hist');
+    });
+}
+
+let checando = false;
+function checarAtualizacao(){
+  if(!temGoogle || !atualId || !versaoBase || checando) return;
+  checando = true;
+  servidor().withFailureHandler(()=>{ checando=false; }).withSuccessHandler(r=>{
+    checando = false;
+    if(!r || !r.versao || r.versao <= versaoBase) return;
+    if(r.status==='Finalizado'){ tratarConflito(r); return; }
+    if(!sujo){
+      carregarNoFormulario(r, {ficarNaAba:true, msg:`🔄 Atualizado com as mudanças de outro celular (salvas às ${r.horaVersao||''}).`});
+    } else {
+      window._maisNova = r;
+      mostrarStatus(`⚠️ Outra pessoa salvou mudanças às ${esc(r.horaVersao||'')}. <button class="mini" onclick="carregarNoFormulario(window._maisNova,{msg:'🔄 Versão mais nova carregada.'})">Puxar atualização</button><br><small>Se puxar, o que você mudou e ainda não salvou aqui se perde.</small>`);
+    }
+  }).obterEnsaio(atualId);
+}
+setInterval(()=>{ if(document.visibilityState==='visible') checarAtualizacao(); }, 15000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') checarAtualizacao(); });
+
+async function gerar(forcar){
+  // Ministério Local é obrigatório escolher quem está presente
+  document.querySelectorAll('.vazio').forEach(el=>el.classList.remove('vazio'));
+  const faltaML = [...document.querySelectorAll('#minLocal [data-det] select')].filter(el=>!el.value);
+  if(faltaML.length){
+    faltaML.forEach(el=>el.classList.add('vazio'));
+    const lista = faltaML.map(el=>`${el.dataset.dk.slice(3)}: escolher quem está presente`);
+    const ir = await perguntar({titulo:'Ministério Local', texto:'Escolha quem está presente antes de gerar o resultado:', lista, ok:'Escolher agora', cancelar:'Fechar'});
+    if(ir){ faltaML[0].scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>faltaML[0].focus(),350); }
+    return;
+  }
+
+  if(forcar!==true){
+  const fim = await perguntar({titulo:'Gerar o resultado final?', texto:'Depois de gerar, esta contagem fica fechada e não pode mais ser alterada. Se ainda vai chegar gente, use "Salvar em andamento".', ok:'Gerar resultado', cancelar:'Voltar'});
+  if(!fim) return;
+  }
+  const reg = montarRegistro('Finalizado');
+  if(forcar===true) reg.forcar = true;
+  mostrarStatus('Salvando o resultado…');
+  salvar(reg,
+    res=>{ if(res && res.conflito){ tratarConflito(res.atual, ()=>gerar(true)); return; }
+           if(res && res.emAndamento){ jaEmAndamento(res.atual); return; }
+           ultimo = reg; mostrar(reg); aba('res');
+           document.getElementById('msg').innerHTML = `<div class="msg ok">Resultado salvo ${temGoogle?'na planilha':'(modo teste, só neste navegador)'} e finalizado.</div>`;
+           novaContagem(); },
+    e => perguntar({titulo:'Não foi possível salvar', texto:(e&&e.message)||String(e), ok:'OK', cancelar:'Fechar'}));
+}
+
+/* ---------- armazenamento ---------- */
+function salvar(reg, ok, err){
+  if(temGoogle){ servidor().withSuccessHandler(ok).withFailureHandler(err).salvarEnsaio(reg); return; }
+  try{ const todos=JSON.parse(localStorage.getItem('ensaios')||'[]');
+    if(!todos.some(x=>x.id===reg.id)){ const ab=todos.find(x=>x.status==='Em andamento' && x.data===reg.data); if(ab){ ok({emAndamento:true, atual:ab}); return; } }
+    const h=todos.filter(x=>x.id!==reg.id); reg.versao=Date.now(); h.unshift(reg); localStorage.setItem('ensaios',JSON.stringify(h.slice(0,100))); ok({id:reg.id, versao:reg.versao}); }catch(e){ err(e); }
+}
+function carregarHistorico(){
+  const box = document.getElementById('histBox'); box.textContent='Carregando…';
+  const render = lista => {
+    lista = (lista||[]).filter(r=>r && r.valores);
+    if(!lista.length){ box.textContent='Nenhum ensaio salvo ainda.'; return; }
+    window._hist = lista;
+    box.innerHTML = `<table><thead><tr><th>Data</th><th>Localidade</th><th>Tipo</th><th style="text-align:right">Instr.</th><th style="text-align:right">Total</th></tr></thead><tbody>` +
+      lista.map((r,i)=>{ const c=calcular(r.valores); return `<tr onclick="abrirHist(${i})"><td>${esc(r.data)}${r.status==='Em andamento'?'<br><span class="badge">em andamento</span>':''}</td><td>${esc(r.localidade)}</td><td>${esc(r.tipo)}</td>
+        <td class="n">${c.instrumentos}</td><td class="n"><b>${c.geral}</b></td></tr>`; }).join('') +
+      `</tbody></table><p class="meta" style="margin-top:8px">Toque em uma contagem <b>em andamento</b> para continuar. As finalizadas abrem só para ver o resultado.</p>`;
+  };
+  if(temGoogle) servidor().withSuccessHandler(render).withFailureHandler(e=>box.textContent='Erro ao carregar: '+e.message).listarEnsaios();
+  else { try{ render(JSON.parse(localStorage.getItem('ensaios')||'[]')); }catch(e){ render([]); } }
+}
+function abrirHist(i){
+  const r = window._hist[i];
+  if(r.status==='Em andamento'){ carregarNoFormulario(r); return; }   // só em andamento pode ser editado
+  mostrar(r); document.getElementById('msg').innerHTML=''; aba('res');
+}
+
+/* ---------- abas ---------- */
+function aba(n){
+  const ids={novo:'Novo',res:'Res',hist:'Hist'};
+  Object.entries(ids).forEach(([x,id])=>{
+    document.getElementById('pg'+id).classList.toggle('hidden', x!==n);
+    document.getElementById('tab'+id).classList.toggle('on', x===n);
+  });
+  document.getElementById('barNovo').classList.toggle('hidden', n!=='novo');
+  if(n==='res' && !ultimo && !window._hist) document.getElementById('resMeta').textContent='Gere uma contagem primeiro.';
+  if(n==='hist') carregarHistorico();
+  window.scrollTo(0,0);
+}
+
+/* ---------- logo da instituição ---------- */
+const LOGO = new Image();
+LOGO.src = 'data:image/png;base64,' + 'iVBORw0KGgoAAAANSUhEUgAAAlgAAAExBAMAAABSW8HgAAAAMFBMVEVgYGDU1NQeHh6YmJgAAAAAAAAAAAD___-8vLxmZmb____-_v4BAQEAAAAkJCS1tbVoK2iFAAAAEHRSTlP__vL-oF4uFA8FaP7-AP7_dUOHSQAAI49JREFUeNrtnX94VOWZ9z9zEjUch5Bo1kKhME219OJybSQB-sPKiEaU1gqvYaS1C1MWZHWpZLeK-tqW0b62GKpNLyn-gNJj17Ywhpq6XReYmJ3dt1YISZtNr8tXhKZHabfbLJCAw2GAZPL-8Tznx_xICDYzk4Fz_5HMnDnnPM_5nvu-n-_9_LgfTzuujFQUFwIXLBesfEsxrNSzcufBFuN2wLObK_zDn6lqGMHhT2nTz3JKGICVOuN_dvLz2VGrXRRDWzQrN4-TCAMnYNJzw5-5CO45yylVzXiGO8W4-3nA6AlTZAI32mKAAv7s6OxALg1EXefPdhGl2fRZRTl1J-pPsl3C8fPIwQ-6reE5qJa_kMEayDFaVTmhDrnwWYv7hjnzatF63jbMKV7RIN0-xM-TNYh25g6sFaPNto4ddOLReHZNHEGUOtQpawBfs3mjm0YbpClaClhHOgrAMQW1zMc7Ad3ULO-oP0nfeRfuFLSDz6HEyqR25c7BK77RqnsPy6PEekafHvyxdqjgEsMK2oyr4Xpt1J6G7kxg_U3jKN3dmMyRDk5MGf1XGx4JKfV0QNnoPQ2Lotk3w9yGO3zHZfAj1-ZmF6yRu7OZLlgjl6d92S-juKAQeSjz4UQDqFXNLlhJjmmoztJZu2Gja4Yp4c4Qx_eFwBN0wRqZbARVd8EambxHLjq0xo7PKlo1zI_7o2dhDl_Q0C8gsErWD_Pjl892tQ9-dL6Dtfz4oeu6zkRHero25C-dECs9j8G6Ymp16xENWDRimj59fOXQsXTifNWs5V3V3WqENu3cLtsTMe4o75qR-arS8xEsY-mho0ci7zcG3AKBDApWdj6aoTKzujucrlFGYPjL_qfTMbQWTlewmAb3Nhc6WCumPeWA5Pq5BzOr1Atnod9VGt6KZQe1oRTss83gQy1osIx1422s6i7_7wxIGct9uo46gpkvh59UZh1tI4OCBX6_G-iDi9Y2FCZYA_BAyxbzW-Cdo5vTTglUdpRO3TVyNpnYe-Aqh3oJBTNqRW9zXIMmKpY-VYhgFeHdYsFwqH9nWxpQle_Dyx9-Upl1TZL6mEq5bDfA4acKUbOMJ0W1K7sBtiQD9e74IYCS0_uifqJ-EOM2aepFxUdK0832tPlhMGu2mC2wlkzSAOrK16UO8gSmdc3YnzwOb6x-xUc13ld8iBGc_c-x_zkwgr21pXrNQCfX_GKBA7bDe42l0w4m43hnFIz7-jVQN8-Z-OFCAuuP7QDGbU2cSG4cy7tbk2C6-rKiqlafeiAC0JaiL2oYaFkP8Js_3lHRoegmZGoTysy5Xfb5Sz4IsKF4dhuwN_a5QgJLYPWFphSdSkJqeVfRUV84ko5RRjIaFpBN_0yXLkZvE-0YSw-VqhpgLDuoAwS1XTfvBrzRwvJZBMIJp6EY8ybMsD1XoHtulxoZEUzJkO3ZwG_uMwmp2gSB2qKqjsoWqylpQlmqFZjPYk5ZMuE6Hm6zw51SNfL-75xMSNPhPvEnf7SgwDLW7Dzh9FQW4TKWTusahanX4T0RY_6Hjme-0zbjH5_Kyty27IBVd0ZzDN9fdLVJuOoOlY7aJHV1G8b8I1dnMjn161ce9DcWCFgVZ7Q0bw_GDRlI_F-KV2BFV1uGX_YtPlAgmqV-2oFVsEUqVa93Z9volxWG-b3Wfe1yX6rSCkSzNIdjF1hVLNpMtmQbd7wjrFFd05ChDqPYv5TVXof4XVsAKlYeyGpvwJbIe7MB2HxL4XbRLD4YBerKG7IKlYg9559pBfZWXP-zwgTL26IDcyZmHSphjPMnaXD4Z4WqWYJwkSPZJtbRFS5YH_iERs5EfeKmg3o2C8iqgzdufCuHWAEv_dZfqGApa5rIsfT_eHZBgjWgfKWBnIv68j8WIlhFXwmRB1G_-rkCBKskL1iJTq5CdPDnm7hguWC5YLlguWC5YLniguWC5YLlguWC5YLliguWC5YLlguWC5YLlisuWC5YLlguWCOS4toQ1AZH-7aLbwkSP4cpXYWRXuW2dqV6QvuaUb5rvIW62Z997cz5pVlGlMS-KaOeuGEZNP1nY9F5ZoYKNUG0mDbKt1WVGlSWnm8-S4k8Po8bRvuu-nuR-X7l9HkGVuJG1B21u0f7tv_yRbb9-DYta2Al740wzJL5sy2nH8F5dllqmORFOoH0hnH48gKZWlJVy7j6c5RaQ-P2dy9fWS5nXRnrEuXTPzxRA4zb8ewGeOC3id3ixErzt8W-ToDq1jacyaYnNAEs6dXLr_p4k3V7inZmLIvFfXw6ZLX4iQpv7eSkp5w1tWL6h3di5aouuu6gBjzQWbRT_ErtZA0e6DQvKJInF03UsgNW8SPtPVsxHg4BGIvaoGdvXVADpZ3YGYD-vSfj4kTo2Ru7S7NTUB_4u2dh0FrBGjsDLJ6yqyd8-LUPvCWODbbD7bLucWdZ0N_OCdO5PNgC2D8BPPh8Kz17P_AWdq5q4-EQtOixMzDn7VYgdpeGvdJOOQIo7SKHdTbMUJi3-ngQ4AaxBqSpRPzm9aediLfEefX2hWamcovnyGzYf14ovi_Hzvn8BWdZGFE7a-sJMSVZfdy-kTxk3kf8_u2gzLccf1vUZlta_uVBzi3L8DmAdSIqcfkVUPy2iYF8wX32iSejKb9Jf5p6wye05F9mAL4MZYlamslTviT_e--2LPZr8sO_Jnkks0a3yv_j0vzWvcCr5waW-WjGWU79ElA3D_g98DeAUhMAZNqrt-wT_zdQV-MDvuW83ptS2XgjUDc7CN6FFt7PZihLqEAiZMFo1MwDXrAURAOjxgeqU7Uw3V8fGDWzgbLUJ-rj3Pa-KIayZoAqfjg8749HYdZuPvo23o9H6dSJ3RUx7n6ecUs0gEErV_sJDW70Rl6_KyprslKH3x-UyjdLVjnMPc0YazazJKjx6mnA0DA3c0guS6aZEQbznUaUNRGuPIh6a7NENkrsrshv_1oX9zn5eSg9YhZOXNS0vpEXD_-xFiZryo2icTV852JapVAMO-MA9-NdExru5EE4uRv2LopS1hzX4RENdZ1PlwZoaT2rm4k1gfoieG_XgJ4w7Hu0UaS3txOp9MG0Bth2p3y9g2BesWy3oyzTxgWiffCZZti3KCoOCIf2iEb_R3dLfMKy4RKvbwD-XkO9H44RBhYRk1VQNEB9ODQysI6NRwkxLgTg8SUbTZo0wC0AF8OrDMLJEKBWWVb_SwcInwW41G-5IOAxmJ0a8BmfAtghX68C8yQuM-yyrgAMH7GgPEmTaZRftCzIrMsPnSm0-v2OND464El_ogGYfXYPH4-aniGuPCHToapVjB_2oj5p9FuNOV-0kGOjs84mCIqwj4trVtpv7XgGTfVoAP3z5twu34Yi4e3DMMs6LRDy6FwKcKlZkMeyoFL4OwDVX_e3mav-JqDW1Hw15fBqOHZ2D38PShlQHOUepaSR94IAz5BYOBwh1RCRrOcLOzU6zUyXdp3NqxXMxBfbIw1JJt-W2rR8THzasTMM0InxsvDwhkbCLgsGYEEVCT-wVLRhoPrNrXaWIvsjLtqcaZVCERwJAZHI-rTXb7Se1cMbndyhAXdAs8LDqL8CKPHblpTZvxVZQQI-s4JqUOSlXW69ooHM2feud9qkbLd9KWbp6fcxIHB0lAWroWqtUGyf1ahVmbTJZ744Z0Bk-IRLggQkvn1LpnBHJ6H6z5b9blAXWW5OcwqFkkbZPr8yLMixpAeTbRegC9_wjvWKFPPdJ12wpEo-0l_V1tbW1taG7Ge0NS2BzyQY3hQV0BPW24hajki4m07Se7qM2zTT8FU_qHt_WpcGV7HOBKpMSjI0YTqpCc_1LAo8hDcE8N6wdpisMJr1pUpUdYpf3iWFpQO8sWrVtbs0jBBAU3t7e3t7e6fjsYVcCgsogz4YSHFxOglN2nunpY9D0sJLV61a9elf27lNLwNQX7soFa1jMIW1Z_HwxVHhnO8hHkKBcSHRDqr-c6Kztvhlw_VfANQJ9BbX1tbWzl8I0BMO9wDTnNdUmXWcX1tbWzs_CNdDFZsyaIlQATUoPLxTfBnpdCIcDuuAGWM8LVBq2pbu330kzuLh7yDWDFCGIt5Wo2wHX_kLtnLTX4AfJvH19vb29jaHV4p9KnN3ZXt7e3sbUIah44E_pDMc-BKUCQ8_YpkVtaJEUYtxC9OgLnM0UJnltFDQExrPiDNPSfvzmJb0fqQkaMczvgy_33mXJjuwAoFAIL33yfCR0EgEOZb202rQQc8QrwwTxt1o9xWW_HZeUvxje0Ito8Imk6wPiirEQwKskpBoB_v9NJ-F8KdH4J2m6zF5WHr_0JwVPuiWx-f29vb29vaG7NbMotMTQNUl5KXJKtAHG02DkXaq2habnEUytmp2iuvs3zF_HjAYTOFCHs6msMuIhSwrFM_8LWl_Zc5wOJ2u2A2i6kt3HRvhWV001ZsApbLSPGnihl_CPr_Z6xkOh8NhqzVTKiuDkqO-V11d7QNfclnQB9XV1TNBcRCGJN-W5OcmrN9VTyLZQ237pytTaz0Ig9XV1X3DKqy0wrjGMyZYxdION6aAn-Q2zSDXuGot-FCDpvVIEuEJMqgLVBXgBx0dv7IbKD_8KtXuxDPu6Ogok7RL7e7u1qAZb1JZhgZbu7t7THIiW4Yyk3pY-N0p2FQMHkQGcYARWAuo--pT2r3lVoFDe3hDWuEy0ZQrAJeExAWeoOob8sKgNA3l8PdupsrswFIsEqGWiWT_CYtxOajGK6QFU1uTfbndH_YHjieVZbc6qh_dejbdVCjdvHjGXpMelPjt7qFFke8CsDal_Bkj6NPzSL5zWpBkcWKjqJFaJpv_TK2WLunbAGrUrvOl9tZN92NyejWtnXiPNBJXJPYHMOmWz9H4WWUNokadz1Jmx6Jx3VTpTcLuoRlrEetlduSspnWk4VRQ8QxDdh6Mlwq23gbrlLzh2mEy0PdJIvUduJeNMD4I8HkZxTri-jKTcd3ngLqe1GCqxGd21pUJr6DU1NTU1ATxBq2yGuBeGqCupqamZja8ygRkk32rVaBH1uWEjjUO-wLWG-uTircgOWIworJA3zAevpnrpHvz2WCVBMUNPcM4rV_AjqDo3yzDA4lfAYujtn80t5BdCy-EgMXOFm1tesS6EP4laBKiAXgvEolEImXgSy6rE85EIpHIz0Gh3y_6ZuOdVhxe4iNxsXiLHkcPjWmHr4pua6MqOWIYBE8kEolEqob28HFd_PQ54vWO0Z0qfnkYSAS1IZ2WJ6glfvwP756KYoRQ_VH-55bSaVOQbat0TLIa6re_rpdP0ZLrlgiFgL-Su-5N1u4H70Vr3xXZr1Y3s6BZdqc0d3pAlhULGVGpMImgNghlMM5XqnxSs5-xDF6aM-Xy55G3kHY4aCme985fK5Oijl39BDeZclha8atDjEpfKkuu0sY5h8LWnj4mHVPzUKGSWgbezWbP1YvAXgA-_LY1olEqTa4R9UnrObAOfus0WG7ldjxBzfxm2GH1VvgDan2jLOvLzw9C0RlZOfUL2jPAn_-M5hgX-ddJsi6KrSIvYPb8lgQ1th8gCuNPOXtBOuUursNw-G80egCKNUKNjpagSDqt4ZjWg-aHT0kyIJ7TjmJK5LEHLVP-SGgoOzRAtRvDuVozhmjbJsAxR1lvU4o5d6MP-iipN3-y9sKyDt2hOXtK-UlKt-Nq59OUmW8yMTSHb2aBbJ0anc2m6bQ2DrP9c8nN4v_iKMBPJSK3ajYxlS-2xEThA-1JdugNOWgt8JI5mDVrd7Euu_vo9-ENOsu6HuQenP8BV8AD8pUstl_EN4XviDmt6WL4vXBST8sL7gyl-HfNaub9w7qsBcRxmiFVwnA9csQgo2xf0a_BnWJEs-RPQQ2U6t0AAf4M8EwAz7PASzcd1EG5oQl7MoM628egPSPBC7Du7tMaBCbs5tjfMl5u53hzHz6zrDk74WIffcLgTqxAAfWfZ7eBcYMj0ut_42EN6iZrQEDe6IUAnPqTL7EZ9aez24C6MyZJTWwGRVYV-K8q_tyceYhGkJOy6LhksNaeFkwrqPUNTf43rFhF67NmBGFM93sP7gYo6RWvoKRXhmkvvf4Y3oNNAOuCsgfz5SDqYK95q94woD6xYhWJUw3g6cV0KOuCnAI2LBL7pTGh12zFSsTV_S_P99GdFBWXPD7d7z0TAlTzRiW9oE7oBSh5eb6PVjPpoDiW6LUiyn_rHaI5vLfZI5VQuCw8v5Mqd1I5AvBo47JGxoIYk4PayXheq7AouqwRODGFF-qTqH6J5Mw6LzI2pPY937hgXl-XT8RTqyXLcrSaIcH_N2boT8qLqOEtC3Ow_ddwXWKaME-fxXUVuym9QnAIJThGVMvow5fP8gekf2-2AjqHZv1IsA7VNyaQuqr2Ee2kls8qLBcaZehWTGmBFRcMS9VzsS_6CORwu6Y8lNcazBB9TIN2HKLYXTfC_qoYE5qlTq-Z89ehvFahU4x_KpZ_t8Eqkb2uY6U53BPZGc1vDWRjuMDuy7BjyLHWHOZbimVjWEZJOlhlAsgid6GYkJgMHnVCmcB6UwRtatBFChgQ3RWGbgdDNlh3i8_Hg2PDw-ddlluDFBnAUsYYd8i39AjmMIBRnw6Wx_rsahaAXwyWLU_SJxss4az6zjrH-8KQTqE0PY7ZqDZYl8hBS19Wtn8oPPGJKMfBHJw8IShGwX_kcgewZzZiMwcnMD7h2Y8P0w1_YYlu_UkHq8z17EnAGKk0K4PJuRReclK0FJqVrFmbABIuhRciJwHZNMsJVn0ONkQvJDM0FSyjzzLEdDvVjXdEjFyUhpDrn4aQpWIcuNS5QioJtwHZYrrBoeBQkJwiw9Ws4UiWCAMzgeVxEUqKo4OpnDRZs8SXKtfBA3LFn59LhgDLnGgfdZFyhsyZwYpJqPwuRMjJ9UltXVLGEFWknhgbHVorKmhty2cFdLN_IRNYHmvdjXY65zU78Y3Yv70NGNf6xf9FbXDglnPJFDO60jk0q3faZ37c-9awWE_bE9YBHm0D2FsyFkOgMRFgOFylzC7D9oUuWJmlz_5oJpxJT2DjgiXEnlV-Igqxr06fbaWpccFKFXtW5OcgdtfX9rzsZ9j0CRcyWLYdVsFnNZHO5r0xC5aWFg7lVMzp2sWaXFlyqW9Mdds6wBq0qH2-6mcuCzkm8koBC5Pc_pjSLHOsTM1TEOZIZ5OwWHSeovqqFCI_RCCdr8jwTWtFb9DK0LIpj7GXnoTZEIF0vuTj1roxOwtBgrxPJtCGACsho6L8uPi3rXQ2OmNBZgNEOTWUg8-vWOlskiRP43PRtD6HscWzUtPZ5FWsyUSDGcFKyJEyX7JXy52UBPHem_Y6j-cLrlIgORvBWGPwF4-VumwSzV1sCM1SBXUw8tcHvxF-GBSEwWdVb0ZeMUsMoVmNUuO1vI3ueIJ4NVFDucxjQd5IaUIMORc54VKcRiDXqhj5ojZqmfhfhLnMo4x8OVALGrVxGJ-Vz3l_91u6LxhXPJo30lUknFLCGZwmaZaewU5za4fyZfplptlbIZYnNfeSCAJqMDNYchFiKUV5A8tMZ3MxDNwMizvtnJC5luPDzynVRCtYlyF5Zs7kFYuesm_l_BYQyb7y8d58Zo9CKANYpzBnyR_PH1gy0XBJPdDUhkwxnScK3ymc06kMYJn5MfwZEtjmjsTLt2mmszHyufJXF5jZrLTYAVZ-Ox0srgBWOhtj7u681aRKLCnclBGshMy8lJ_QsKiGM1HgmRqxK81L889U0Lpodz71ShGw2KPiZnoV-G7wxGnAmMztGmNBAklpuHMuJz8YOwMUj-d7oTSf1SeiMMVMlZR3CecVKxLWYtU-MoDlEwT-OK4ARWIUTs24RjokEFyeR046piQhqVQV8TSw4mJnFXrOZcO_81nUoCBab9rNoeJgDppou3tcoGRzeAXA1gx5HUqk-en56xMZY1LGz4TvIq01DAnzK9bHyEBU_uVHolMtYTeHit0Y9gAcy1ufyJiT4wIcVefhFLBOhUSk4TaGNl-X6ZnLrA4-xWooRRg9w20MU5vDTZaHtxMkemQY7TaGtocXWfItD68k-3cjei67apz33EEBKPGZk-LtfTt6BNvK29DO2JONcnbdQnOLSglWXDP9u7uQzpIJMunym46dvUT4HHP9e6r0B-UmhZSEnGA1SI1qdv17Rg_f5wSrXmQ-j-uuf3fIY3IfFL_MPS_AOil3qrzU5e9OOSG3FLhYDtMLsJ6VO35-w_XvTinxCft7QXJ5AVZU7jQi9yFwRcpC4bRMpqU4iYPrsjI7LZNpeX4HfDcYOwNQVBo74yLkkPgkPh4FTn6QclOzonL6xefzNg1jrDotv3Bag1AvwTqpiS05zT3XXHEwrbcc5EEB1hOLCvyUkItPSng4zkEeFIjX8_cAfMecxOKKKR6bPNSDAs9g9AEYfXKLdlcsUcvEIsgSPw_1o3AqyHgNYFBziUOa_ELuy3cxA8XNCpvMTbS-Q373jBijdiimUO9AXbBAiQflpntGn7ULiCtOO_w-QL-fLW96vlTP3GYE8crdXKNP-AFonaEBS3wAeA-axS_xmT1IsKT38MxDEzUwHiPRQAA1t-ofn8SaEFBUaiz2tCNZ-6JoDnebWhQV_2OPhODRRvHFuE1ud_hoI2ZdFrcAxO7SMCZzMh6fxOLnc6tbi6LmvLUpCnxWIBjNR1vofdyp8q8tFB_6rKUL8RZxmrmvch5WNFyMJwio9RxUzF7AW2WXVq7RWuj8JpKpGBrmDr23yh_eCebNa-1A7QO4nxLFXEBeJglEriVpx2sB0aDULvHXuMKHrG9epF_gw4SkRQNfymkdlOrq6umzzYWiX62url5hQqSAnFddrGN8fP_r_uF2Ec-VHM_j4sxYS0vLnpfNrcgPtrS0bKiXEDWA3L38GNzThvriGFlEmrdKeAFUnZjtjR5DTD3vxPBZWyXpgIexkaM-f5oFQJVYjWkpOoARxbPQ2oPdB6g1NTe6mkWnc260IrLgKFCiWytYvx8EIpGdrmbFo0ywD90rsuBcCv6N0Czsz_vT_zNmYp_ivJX8EAz0a1zXbB4wOsV4ydJmqoqEh1f9UdQn68obLnCw1OeEggmsLqpFmaGJXcr7MEJGUDsm6DPQxJ1x7YI2Qyki1qKpvb1Ng_EaGD4SqLrw8D8Unmv72EjBmW-w_m_I8cX4HKBociaGD1CvFI3i9pALFiTW258rHtZErDwD_kN4eF7602wA1l_QYCnV1dXTV8A4P0BNTRA-HAJYDT44ITk8216-Moid4e4CpQ4tLS17NtTLJBeTI3-Afw_K2Pn_rVr1iJUHQ933-N3IOXgXNim9H7HZD7zkR_2JjG96wuGtogsiEADUJ_xwQYMlwp0iO5nYKzAeiOvWKT7uKH8ZySA6XQePnWjwPUgsTIqY-0iExebWY4Jl5d0MB-1kLmo9_BJWQ6CysrIyAC9SJXv9FjAm1qrl1wyNL2JnkVgLg-CDSR0dHR0_gGO8KbLiGn2OnF5q_sDKX2xYCyhtjmQvg5AIhfpEzEN_UFOCW2Gcv7T0SBTFAuv7wtV_OnQBgaW2S9ZeZh2pb-RbfZpcUUsZqs8T1NgLODcF8ooLl12IDt5jO--1MDiI2WmjQ589TnFd6nXRCxAs4xP250HwPgVTxLeNsInvi0Cak81ubBioWOPQENUPT1ldpEUwiPqGD6BuCdbBPEqefNZFteL_gQbggVqZSOXHtSADaCiphTAlrz_WwdzNgFoL4USthax2wYCVlDlFDad-cJyjrnd-V8MXrhkWmLhguWC5YLlguWC5YLniguWC5YI10ti8AMGK35wfrOIzCxCsgX11ecHqYb0AA-kiXsvD5Jcl-7WThemztl8UzDFWsybpWbx7dh1800_X5tS1f_NgVlU5y_1Z6uYcmuKSSVkuKpuapQSB7blSLuOBXRoQKFDNOv707DZQN9cdiGYfq8VTNMCY-_NCNcP-l1dsAZreyPq27EvOtALE_mF3UaGChbph_qkoqHuN27xZhGvFoTaArM_TzQZYxgLb7LYZK_o1UF_LHlyBaePbhFo966hDQ6hANOuNtQ0O5Voyuw1QXzNuyIYxrnjn6i0AyXc3Hj1VKGao_qB6tz3RahtXXqcB6l5l1tG20dXh5b3yhhXlzgUrxqK2aZ2F4rMS--6MO2xi3-MrWnQgsffAymmjxxsD047vklAtakgmXG34GwvHwW-v-_oWp6N_fV2LDtCEMvPanlHAK_DuhBlbLKiSsHpgV6G1hk2p7eLr6_o1gEQ7gdq_EK_AuxN69psGuCjlXuO2FCJ1UNY2JMFlTJ_cCkAYlP91uUjqcO5-6r7y7qn720TAbFx_bbJWGRsas_dAWQJr-ic1UDcn-xJ1z475Rw6Lp0w0ceDy2upzBCygfKhL32F_fac0kgzk3P7JAHM-2VhAYH1s04otwOHvffnXSe3fNl6fN8EEaCscuOQqX3Wr7-xTYozgu5_pvGayhpV1Vpl57amUJZtLRNtorNn5aEGZobrhphZA3f6ft8STIkN1z67Aii5LocKH2zkQCazqpppWX9oeTkaQ0go6uCYW2e90RcrMa3siZISK2F1awfmsf8K4VwN17xu1x5LZVRgC08dXhpOOAAciBIj6SegAig9QIxnuXPGRa9KQMuZNMAuZoFFwYA2QeFpw9_YDK1PXoob3RKit7KhM1aQwPcPOwDKm-uZ2hdMWTBvrutraAJRZk38WK8BAugj6d80XvQFN1B0qTQcGat_9TGflyCbxBaJTqxM9WgZVW1HeIkzUuGHizsLtdWAbFlzG9RnIVXjPBgjcUTHQqVz9C39GpQp4fzGVam-Xuj-SmcZ3t4q59MYNR7O8Rj_r0yS3Mb93hgao7UORd4nR_t7aUj3mtw53VuGNXgbPZUYphcYbNxzd2UaBgwXbWCFCQ0ne9aG8UhhaUpastgzjwQKVv5lh0nhl1sSsQ5WjCbhbeH1dt0XejaWHjr4_8p7ETrunPmc1j8sO5iRJRo5mK6sbsMi72sSBy1ceOuoLv2-gunp0B40_2va13DxF7qZ2b-P15SZebIUDP_dNrW49J8RsGq87aXxbrh4h22AZjhVv6jZenzf-XTNeUXvaOfDzq2fq1d4uht9_NUBpxUCnok9OovGB7hQaHwgXNliDK89oScFO5Df3ldvRDmp3k9CZ6pk6RVXgjQKXwVEg5oeBTpTD5QIFR1NqLD10zamUVnLWhEI3wyYrR6QJzxYIzP9QV5KPV8Pd5lkdQET8Q7rw7mSNMZYeuq4rTYmKb2_VzhS6z1JfS-n0lczKuKOio3TqObaKxlRf5m4dY11_63nh4A9vzpSnSN0CGLWVA52KvuDsXTSrj-tFVd2qFqFNywSVloMHyU1r2MQQaZ3EwqX9j9e-66cDFF_Ub_n6AEBCh2q8XcPFjzmCKidgBTWgiYplQ4_rqOE9krnvfw5DLpMb4SI5K4wOaoUPVnz7VxoADj9p3DCiYcNzWSZnzJvQJsPop7fFzwPNKtm8_ncNAOreA1d9pHT0uJCx_MhhGRwa3_zY-hMFbIaO1B8PIeHi8F4qPvIXR4Yi6DlSuUsyeeObH3u2sH1WUi_cQ8TXvaVJvA5cUju36y9RMOO-ckd0uOTaiUlQeeMA0c6sgvXLslG6Z2w_V97EsYPJxvjEqXVHGmyadcXU6vc1cBgoLe_Sd1jRofHYZanjz8dugkXclF2wfjeKt32yI_3YJetZ33vUZBA97WIcbHhWkDmM7nEo1XNp53k7IMoPOkbrWaJ56HUQ1ujEi_DhdmD59KlUe1_xDcEVjCBHazKMhhnLr524K6e1z_3q-4fg1Lre_3bgsrWnHTgQCXirj8_rTjpZmVoarZmsdaSpT6Dysm_vynXVbbA-Wjnq9565OfPxS9bD-r4kwIQn687QUdOddmiJr3zikL3yHK8a9ecwk1bhaRf7WWRLTkyJTxrqt1PrBvu6z6lVXOIr93x7yKJOZ2kPPdEnZ0zOY0oooWHwRC-9nAUzI1hJOeUP7spLPdW8-aw0eVCqWeNgHwz2Jf9YDpRzSX2EsSDFjBG55EHGvLjLfl2wXLDyK6Wg5CchXAHKcSiGi7L6PlpzaSa12bx7O572bD_B0KR0tPnvaddnjaFHOY_ASmS9BM88PcslFOVqy5yTn892Cf8fLPoQqhcaxk4AAAAASUVORK5CYII='.replace(/-/g,'+').replace(/_/g,'\x2f');
+const logoPronto = () => LOGO.complete && LOGO.naturalWidth > 0;
+/* escreve o texto diminuindo a fonte até caber na largura */
+function textoCabendo(x, s, X, Y, tam, min, larg, cor, peso, F){
+  let t=tam; do{ x.font=`${peso} ${t}px ${F}`; if(x.measureText(s).width<=larg) break; t-=2; }while(t>min);
+  x.fillStyle=cor; x.textAlign='left'; x.fillText(s,X,Y);
+}
+
+/* ---------- compartilhar imagens ---------- */
+function nomeArquivo(r){ return `Ensaio ${r.tipo} - ${r.localidade} - ${r.data.split('/').join('-')}`; }
+
+/* Mostra a imagem numa tela cheia dentro do app, com o botão de compartilhar */
+let arquivoShare = null;
+function abrirCompartilhar(canvas, nome, a4){
+  const url = canvas.toDataURL('image/png');
+  arquivoShare = null;
+  canvas.toBlob(b=>{ arquivoShare = new File([b], nome+'.png', {type:'image/png'}); }, 'image/png');
+  const sv = document.getElementById('shareView');
+  sv.innerHTML = `
+    <div class="svTop no">
+      <b>${a4?'Folha A4':'Resultado'}</b>
+      <button class="svX" id="svFechar">✕ Fechar</button>
+    </div>
+    <div class="svBotoes no">
+      <button class="svB wpp" id="svShare">📤 Compartilhar no WhatsApp</button>
+      ${a4?'<button class="svB primary" id="svPrint">🖨️ Imprimir</button>':''}
+    </div>
+    <img id="svImg" src="${url}" alt="${esc(nome)}">
+    <p class="svDica no" id="svDica">Se o botão não abrir, toque e segure na imagem e escolha <b>Compartilhar imagem</b>.</p>`;
+  sv.classList.remove('hidden'); sv.scrollTop = 0;
+  document.body.classList.add('svAberto');
+  document.getElementById('svFechar').onclick = ()=>{ sv.classList.add('hidden'); sv.innerHTML=''; document.body.classList.remove('svAberto'); };
+  document.getElementById('svShare').onclick = async ()=>{
+    try{
+      const f = arquivoShare || new File([await (await fetch(url)).blob()], nome+'.png', {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f], title:nome}); return; }
+    }catch(e){ if(e && e.name==='AbortError') return; }
+    document.getElementById('svDica').classList.add('forte');
+  };
+  const pr = document.getElementById('svPrint'); if(pr) pr.onclick = ()=>window.print();
+}
+
+/* ---------- imagem do resultado ---------- */
+function quebrar(ctx, texto, larg){
+  const pal=String(texto).split(' '), out=[]; let l='';
+  pal.forEach(p=>{ const t=l?l+' '+p:p; if(ctx.measureText(t).width>larg && l){ out.push(l); l=p; } else l=t; });
+  if(l) out.push(l); return out;
+}
+function desenharResultado(reg){
+  const c=calcular(reg.valores), t=textos(reg), val=reg.valores;
+  const W=1080, P=56, F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=4000;
+  const x=cv.getContext('2d');
+  const rr=(X,Y,w,h,r,cor)=>{ x.fillStyle=cor; x.beginPath(); x.roundRect(X,Y,w,h,r); x.fill(); };
+  const txt=(s,X,Y,tam,cor,peso='400',al='left')=>{ x.font=`${peso} ${tam}px ${F}`; x.fillStyle=cor; x.textAlign=al; x.fillText(s,X,Y); };
+  x.fillStyle='#eef4f1'; x.fillRect(0,0,W,4000);
+
+  // cabeçalho
+  x.fillStyle='#1f6f5c'; x.fillRect(0,0,W,230);
+  const LGW=280, LGH=Math.round(LGW*305/600);
+  if(logoPronto()) x.drawImage(LOGO,W-P-LGW,(230-LGH)/2,LGW,LGH);
+  const larg = W-2*P-(logoPronto()?LGW+30:0);
+  txt(`Ensaio ${reg.tipo}`,P,82,34,'#cfeee3','600');
+  textoCabendo(x,`Congregação - ${reg.localidade}`,P,142,50,28,larg,'#ffffff','800',F);
+  txt(`📅 ${reg.data}`,P,192,30,'#d9efe8','500');
+  let y=260;
+
+  // total geral
+  rr(P,y,W-2*P,150,24,'#ffffff');
+  txt('TOTAL GERAL DE PARTICIPANTES',P+36,y+62,28,'#5f716a','700');
+  txt(String(c.geral),W-P-36,y+108,96,'#1f6f5c','800','right');
+  y+=180;
+
+  // blocos de totais
+  const tiles=[['Instrumentos',c.instrumentos],['Músicos',c.musicos],['Organistas',c.organistas],
+               ['Min. Local',c.minLocal],['Min. Visita',c.minVisita],['Irmandade',c.irmandade]];
+  const tw=(W-2*P-2*20)/3, th=150;
+  tiles.forEach(([n,v],i)=>{ const X=P+(i%3)*(tw+20), Y=y+Math.floor(i/3)*(th+20);
+    rr(X,Y,tw,th,20,'#ffffff'); txt(String(v),X+tw/2,Y+82,64,'#1d2b26','800','center'); txt(n,X+tw/2,Y+124,26,'#5f716a','500','center'); });
+  y+=2*th+20+30;
+
+  // famílias com rosca
+  const fh=360; rr(P,y,W-2*P,fh,24,'#ffffff');
+  txt('INSTRUMENTOS POR FAMÍLIA',P+36,y+56,26,'#5f716a','700');
+  const cx=P+36+125, cy=y+210, R=110;
+  x.lineWidth=46; x.strokeStyle='#e6eeea'; x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
+  let a=-Math.PI/2;
+  c.fam.forEach(f=>{ if(!c.instrumentos||!f.total) return; const d=f.total/c.instrumentos*Math.PI*2;
+    x.strokeStyle=f.hex; x.beginPath(); x.arc(cx,cy,R,a,a+d); x.stroke(); a+=d; });
+  txt(String(c.instrumentos),cx,cy+14,48,'#1d2b26','800','center');
+  const lx=cx+R+70; let ly=y+135;
+  c.fam.forEach(f=>{ const pc=c.instrumentos?(f.total/c.instrumentos*100).toFixed(2).replace('.',','):'0,00';
+    x.fillStyle=f.hex; x.beginPath(); x.arc(lx,ly-10,12,0,Math.PI*2); x.fill();
+    txt(f.nome,lx+28,ly,32,'#1d2b26','600'); txt(`${f.total} · ${pc}%`,W-P-36,ly,32,'#1d2b26','700','right'); ly+=60; });
+  y+=fh+30;
+
+  // ministério e localidades
+  const secoes=[];
+  if(t.local.length) secoes.push(['MINISTÉRIO LOCAL',t.local]);
+  if(t.visita.length) secoes.push(['MINISTÉRIO VISITA',t.visita]);
+  if(t.visit.length) secoes.push(['LOCALIDADES VISITANTES',[t.visit.join(' · ')]]);
+  if(secoes.length){
+    x.font=`400 30px ${F}`;
+    const linhas=secoes.map(([h,ls])=>[h,ls.flatMap(l=>quebrar(x,'• '+l,W-2*P-72))]);
+    const alt=linhas.reduce((s,[h,ls])=>s+60+ls.length*44+16,30);
+    rr(P,y,W-2*P,alt,24,'#ffffff');
+    let yy=y+30;
+    linhas.forEach(([h,ls])=>{ yy+=40; txt(h,P+36,yy,26,'#1f6f5c','700'); yy+=20;
+      ls.forEach(l=>{ yy+=44; txt(l,P+36,yy,30,'#1d2b26','400'); }); yy+=16; });
+    y+=alt+30;
+  }
+  txt('Contagem do Ensaio',W/2,y+20,24,'#8a9a94','500','center');
+  y+=50;
+
+  const out=document.createElement('canvas'); out.width=W; out.height=y;
+  out.getContext('2d').drawImage(cv,0,0);
+  return out;
+}
+
+function compartilharImagem(){
+  if(!window._atual) return;
+  const r=window._atual;
+  abrirCompartilhar(desenharResultado(r), nomeArquivo(r), false);
+}
+
+/* ---------- folha A4 (imagem para impressão) ---------- */
+function desenharA4(reg){
+  const c=calcular(reg.valores), t=textos(reg), val=reg.valores;
+  const W=1240, H=1754, M=70, F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const x=cv.getContext('2d');
+  const txt=(s,X,Y,tam,cor,peso='400',al='left')=>{ x.font=`${peso} ${tam}px ${F}`; x.fillStyle=cor; x.textAlign=al; x.fillText(String(s),X,Y); };
+  const caixa=(X,Y,w,h,borda,fundo,r=14,lw=2)=>{ x.beginPath(); x.roundRect(X,Y,w,h,r); if(fundo){x.fillStyle=fundo;x.fill();} if(borda){x.lineWidth=lw;x.strokeStyle=borda;x.stroke();} };
+  const linhaH=(X1,X2,Y,cor,lw=1)=>{ x.strokeStyle=cor; x.lineWidth=lw; x.beginPath(); x.moveTo(X1,Y); x.lineTo(X2,Y); x.stroke(); };
+  const pct=n=>c.instrumentos?(n/c.instrumentos*100).toFixed(2).replace('.',',')+'%':'0,00%';
+  x.fillStyle='#ffffff'; x.fillRect(0,0,W,H);
+
+  // cabeçalho
+  caixa(M,M,W-2*M,160,'#1f6f5c',null,16,3);
+  const AW=250, AH=Math.round(AW*305/600);
+  if(logoPronto()) x.drawImage(LOGO,W-M-AW-20,M+(160-AH)/2,AW,AH);
+  txt(`Ensaio ${reg.tipo}`,M+30,M+52,26,'#5f716a','700');
+  textoCabendo(x,`Congregação - ${reg.localidade}`,M+30,M+100,40,24,W-2*M-60-(logoPronto()?AW+30:0),'#1f6f5c','800',F);
+  txt(`Data: ${reg.data}`,M+30,M+138,26,'#1d2b26','500');
+
+  // coluna de instrumentos
+  const top=M+195, LW=650, LX=M, rh=37;
+  let y=top;
+  c.fam.forEach(f=>{
+    x.fillStyle='#eef4f1'; x.fillRect(LX,y,LW,rh+4);
+    x.fillStyle=f.hex; x.beginPath(); x.arc(LX+18,y+rh/2+2,8,0,Math.PI*2); x.fill();
+    txt(f.nome,LX+36,y+28,24,'#1d2b26','700');
+    txt(f.total,LX+LW-130,y+28,24,'#1d2b26','700','right');
+    txt(pct(f.total),LX+LW-10,y+28,24,'#1d2b26','700','right');
+    y+=rh+4;
+    f.itens.forEach(i=>{
+      const n=Number(val[i])||0, cor=n?'#1d2b26':'#a6b3ae';
+      txt(i,LX+36,y+26,22,cor,n?'500':'400'); txt(n,LX+LW-130,y+26,22,cor,n?'600':'400','right');
+      linhaH(LX,LX+LW,y+rh,'#e3ebe7'); y+=rh;
+    });
+  });
+  linhaH(LX,LX+LW,y+4,'#1f6f5c',3);
+  txt('Total de instrumentos',LX+10,y+38,24,'#1d2b26','800');
+  txt(c.instrumentos,LX+LW-130,y+38,24,'#1d2b26','800','right'); txt('100%',LX+LW-10,y+38,24,'#1d2b26','800','right');
+
+  // coluna da direita
+  const RX=LX+LW+30, RW=W-M-RX; let ry=top;
+  const titulo=(s,Y)=>txt(s.toUpperCase(),RX+22,Y,22,'#1f6f5c','800');
+  // totais
+  const tot=[['Instrumentos',c.instrumentos],['Músicos',c.musicos],['Organistas',val['Organistas']||0],['Examinadoras',val['Examinadoras']||0],
+             ['Ministério Local',c.minLocal],['Ministério Visita',c.minVisita],['Irmãos',val['Irmãos']||0],['Irmãs',val['Irmãs']||0]];
+  const th=60+tot.length*38+70;
+  caixa(RX,ry,RW,th,'#c9d8d1','#ffffff');
+  titulo('Totais',ry+40);
+  let yy=ry+82;
+  tot.forEach(([n,v])=>{ txt(n,RX+22,yy,23,'#1d2b26'); txt(v,RX+RW-22,yy,23,'#1d2b26','700','right'); yy+=38; });
+  linhaH(RX+22,RX+RW-22,yy-18,'#1f6f5c',3);
+  txt('Total geral',RX+22,yy+24,28,'#1d2b26','600'); txt(c.geral,RX+RW-22,yy+24,32,'#1f6f5c','800','right');
+  ry+=th+22;
+  // famílias
+  const fh=60+c.fam.length*62;
+  caixa(RX,ry,RW,fh,'#c9d8d1','#ffffff'); titulo('Famílias',ry+40);
+  yy=ry+78;
+  c.fam.forEach(f=>{ txt(`${f.nome}: ${f.total} (${pct(f.total)})`,RX+22,yy,21,'#1d2b26');
+    caixa(RX+22,yy+10,RW-44,12,null,'#eef4f1',6); if(c.instrumentos&&f.total) caixa(RX+22,yy+10,(RW-44)*f.total/c.instrumentos,12,null,f.hex,6);
+    yy+=62; });
+  ry+=fh+22;
+  // ministério e localidades
+  x.font=`400 21px ${F}`;
+  const blocos=[['Ministério Local',t.local],['Ministério Visita',t.visita],['Localidades visitantes',t.visit]];
+  blocos.forEach(([h,ls])=>{
+    const linhas=ls.length?ls.flatMap(l=>quebrar(x,'• '+l,RW-44)):['Nenhum'];
+    const bh=60+linhas.length*30+10;
+    if(ry+bh>H-M) return;
+    caixa(RX,ry,RW,bh,'#c9d8d1','#ffffff'); titulo(h,ry+40);
+    let ly=ry+72; linhas.forEach(l=>{ txt(l,RX+22,ly,21,ls.length?'#1d2b26':'#a6b3ae'); ly+=30; });
+    ry+=bh+22;
+  });
+  txt('Gerado pelo Contagem do Ensaio',W-M,H-30,16,'#8a9a94','400','right');
+  return cv;
+}
+function compartilharA4(){
+  if(!window._atual) return;
+  const r=window._atual;
+  abrirCompartilhar(desenharA4(r), nomeArquivo(r)+' - A4', true);
+}
+
+montar();
+['localidade','tipo'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{ sujo = true; rascunhoLocal(); }));
+// retomar contagem que ficou aberta neste aparelho
+(async()=>{
+  let r=null; try{ r=JSON.parse(localStorage.getItem('rascunho')||'null'); }catch(e){}
+  if(!r || !r.valores || !Object.values(r.valores).some(n=>Number(n)>0)) return;
+  const ok = await perguntar({titulo:'Continuar a contagem?', texto:`Tem uma contagem de ${r.data} (${r.localidade} – ${r.tipo}) aberta neste aparelho.`, ok:'Continuar', cancelar:'Começar nova'});
+  if(ok===null) return;
+  if(ok) carregarNoFormulario(r, {manterSujo:true}); else novaContagem();
+})();
+if('serviceWorker' in navigator && !MODO_TESTE) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
