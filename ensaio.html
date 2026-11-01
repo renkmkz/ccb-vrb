@@ -291,7 +291,7 @@ function linha(k, label, o={}){
 }
 function montar(){
   document.getElementById('localidade').innerHTML = opts(LOCALIDADES);
-  document.getElementById('tipo').innerHTML = opts(TIPOS);
+  document.getElementById('tipo').innerHTML = opts(TIPOS, 'Oficial');   /* já vem escolhido */
   document.getElementById('instrumentos').innerHTML = FAMILIAS.map(f =>
     `<div class="fam"><span class="dot" style="background:${f.hex}"></span>${f.nome}<span class="famtot" data-fam="${f.id}">0</span></div>` +
     f.itens.map((i,n)=>linha(i,i,{first:n===0})).join('')).join('');
