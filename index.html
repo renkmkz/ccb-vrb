@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f6f5c">
-<title>CCB - VRB</title>
+<title>CCB - Vila Rio Branco</title>
+<meta name="description" content="Contagem do Ensaio Local e dos Recitativos RJM">
+<meta property="og:title" content="CCB - Vila Rio Branco">
+<meta property="og:description" content="Contagem do Ensaio Local e dos Recitativos RJM">
+<meta property="og:image" content="https://renkmkz.github.io/ccb-vrb/icon-512.png">
+<meta property="og:url" content="https://renkmkz.github.io/ccb-vrb/">
+<meta property="og:type" content="website">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -64,7 +70,12 @@ const LINK_APP = location.origin + location.pathname.replace(/[^\/]*$/, '');
 
 /* compartilhar: abre o WhatsApp com a mensagem e o link */
 function compartilhar(){
-  const msg = 'App CCB - VRB (Contagem do Ensaio Local e dos Recitativos RJM)\n' + LINK_APP + '\nAbra o link e toque em "Instalar APP".';
+  const msg = 'Aplicativo CCB - Vila Rio Branco\n\n'
+            + 'Funções\n'
+            + '🎻 *Ensaio Local*\n'
+            + '📖 *Recitativos RJM*\n\n'
+            + 'Abra o link e instale 👇\n\n'
+            + LINK_APP;
   location.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
 }
 
