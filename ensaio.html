@@ -783,6 +783,32 @@ function desenharResultado(reg){
     txt(f.nome,lx+28,ly,32,'#1d2b26','600'); txt(`${f.total} · ${pc}%`,W-P-36,ly,32,'#1d2b26','700','right'); ly+=60; });
   y+=fh+30;
 
+  /* detalhe dos instrumentos (só os que têm quantidade), em duas colunas */
+  const blocosI = c.fam.map(f=>({nome:f.nome, hex:f.hex, itens:f.itens.filter(i=>Number(val[i])>0).map(i=>[i,Number(val[i])])}))
+                       .filter(b=>b.itens.length);
+  const orgI = ORGANISTAS.filter(o=>Number(val[o])>0).map(o=>[o,Number(val[o])]);
+  if(orgI.length) blocosI.push({nome:'Organistas', hex:'#1f6f5c', itens:orgI});
+  if(blocosI.length){
+    const altB = b => 52 + b.itens.length*44 + 18;
+    const cols = [[],[]], hc = [0,0];
+    blocosI.forEach(b=>{ const k = hc[0]<=hc[1] ? 0 : 1; cols[k].push(b); hc[k]+=altB(b); });
+    const ih = 90 + Math.max(hc[0],hc[1]);
+    rr(P,y,W-2*P,ih,24,'#ffffff');
+    txt('INSTRUMENTOS',P+36,y+56,26,'#5f716a','700');
+    const cw = (W-2*P-72-40)/2;
+    cols.forEach((col,k)=>{
+      const X = P+36+k*(cw+40); let yy = y+90;
+      col.forEach(b=>{
+        x.fillStyle=b.hex; x.beginPath(); x.arc(X+10,yy+24,10,0,Math.PI*2); x.fill();
+        txt(b.nome,X+30,yy+34,28,'#1d2b26','700');
+        yy+=52;
+        b.itens.forEach(([n,q])=>{ yy+=36; txt(n,X+30,yy,27,'#1d2b26','400'); txt(String(q),X+cw,yy,27,'#1d2b26','700','right'); yy+=8; });
+        yy+=18;
+      });
+    });
+    y+=ih+30;
+  }
+
   // ministério e localidades
   const secoes=[];
   if(t.local.length) secoes.push(['MINISTÉRIO LOCAL',t.local]);
