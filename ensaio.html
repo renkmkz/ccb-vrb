@@ -219,7 +219,7 @@
 
 <script>
 /* versão desta tela: subir a cada mudança (aparece no topo e no rodapé da tela inicial do app) */
-const VERSAO = '1.6';
+const VERSAO = '1.7';
 
 /* ================= CONFIGURAÇÃO (edite aqui) ================= */
 const LOCALIDADES = ['Vila Rio Branco','Vila Diva','Água Rasa'];          // onde é o ensaio
@@ -480,8 +480,7 @@ function mostrar(reg){
 
   const lista = INSTR.filter(i=>Number(val[i])>0);
   document.getElementById('resLista').innerHTML =
-    (lista.length ? lista.map(i=>`<div><b>${val[i]}</b> ${esc(i)}</div>`).join('') : '<div>Nenhum instrumento</div>') +
-    ORGANISTAS.filter(o=>val[o]>0).map(o=>`<div><b>${val[o]}</b> ${o}</div>`).join('');
+    (lista.length ? lista.map(i=>`<div><b>${val[i]}</b> ${esc(i)}</div>`).join('') : '<div>Nenhum instrumento</div>');
 
   const bloco = (titulo, linhas) => `<div class="sec">${titulo}</div>` +
     (linhas.length ? linhas.map(l=>`<div>${esc(l)}</div>`).join('') : '<div>Nenhum</div>');
@@ -788,11 +787,9 @@ function desenharResultado(reg){
     txt(f.nome,lx+28,ly,32,'#1d2b26','600'); txt(`${f.total} · ${pc}%`,W-P-36,ly,32,'#1d2b26','700','right'); ly+=60; });
   y+=fh+30;
 
-  /* detalhe dos instrumentos (só os que têm quantidade), em duas colunas */
+  /* detalhe dos instrumentos (só os que têm quantidade), em duas colunas; organistas são pessoas, não entram aqui */
   const blocosI = c.fam.map(f=>({nome:f.nome, hex:f.hex, itens:f.itens.filter(i=>Number(val[i])>0).map(i=>[i,Number(val[i])])}))
                        .filter(b=>b.itens.length);
-  const orgI = ORGANISTAS.filter(o=>Number(val[o])>0).map(o=>[o,Number(val[o])]);
-  if(orgI.length) blocosI.push({nome:'Organistas', hex:'#1f6f5c', itens:orgI});
   if(blocosI.length){
     const altB = b => 52 + b.itens.length*44 + 18;
     const cols = [[],[]], hc = [0,0];
