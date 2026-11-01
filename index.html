@@ -42,7 +42,8 @@
   .box h3{margin:0 0 10px}
   .box ol{padding-left:20px;margin:0 0 14px}
   .box button{width:100%;padding:13px;border:0;border-radius:10px;background:#1f6f5c;color:#fff;font-size:16px;font-weight:700}
-  footer{text-align:center;font-size:12px;color:#8a9a94;padding-bottom:20px}
+  footer{text-align:center;font-size:12px;color:#8a9a94;padding-bottom:20px;line-height:1.7}
+  footer #versoes{font-size:11px;font-weight:400;color:#b4c1bc}
 </style>
 </head>
 <body>
@@ -56,7 +57,7 @@
   <button class="btn wpp" onclick="compartilhar()"><span class="ic">💬</span><span>Compartilhar<small>Mandar o link do app no WhatsApp</small></span></button>
   <button class="btn inst hidden" id="btnInstalar" onclick="instalar()"><span class="ic">📲</span><span>Instalar APP<small>Coloca o ícone na tela do celular</small></span></button>
 </main>
-<footer>Congregação Cristã no Brasil</footer>
+<footer>Congregação Cristã no Brasil<br><span id="versoes">Ensaio Local v… · Recitativos RJM v…</span></footer>
 
 <div class="modal hidden" id="modal"><div class="box">
   <h3>Instalar o app</h3>
@@ -95,7 +96,17 @@ async function instalar(){
   document.getElementById('modal').classList.remove('hidden');
 }
 
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* versões: lidas de cada tela publicada (mostra o que vai abrir de verdade) */
+async function versaoDe(pagina){
+  try{ const t = await (await fetch(pagina, {cache:'no-cache'})).text();
+       const m = t.match(/const VERSAO = '([^']+)'/); return m ? m[1] : '?'; }
+  catch(e){ return '?'; }
+}
+Promise.all([versaoDe('ensaio.html'), versaoDe('recitativos.html')]).then(([e,r])=>{
+  document.getElementById('versoes').textContent = 'Ensaio Local v' + e + ' · Recitativos RJM v' + r;
+});
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).catch(()=>{});
 </script>
 </body>
 </html>

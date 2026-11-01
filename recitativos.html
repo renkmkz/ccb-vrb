@@ -215,6 +215,9 @@
 </div>
 
 <script>
+/* versão desta tela: subir a cada mudança (aparece no topo e no rodapé da tela inicial do app) */
+const VERSAO = '1.5';
+
 /* ================= CONFIGURAÇÃO (edite aqui) ================= */
 const LOCALIDADES = ['Vila Rio Branco'];
 const TIPOS = ['Reunião de Jovens e Menores','Extra'];
@@ -301,7 +304,7 @@ function montar(){
 
   const d = new Date();
   document.getElementById('data').value = d.toLocaleDateString('pt-BR');
-  document.getElementById('hoje').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('hoje').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' · Versão ' + VERSAO;
 
   const pg = document.getElementById('pgNovo');
   pg.addEventListener('click', e=>{ const b=e.target.closest('button[data-k]'); if(b) definir(b.dataset.k, v[b.dataset.k]+Number(b.dataset.d)); });
@@ -407,6 +410,8 @@ function novaContagem(){
   Object.keys(v).forEach(k=>{det[k]=[];definir(k,0)});
   carregando = false;
   atualId = null; versaoBase = null; sujo = false;
+  document.getElementById('localidade').selectedIndex = 0;
+  document.getElementById('tipo').selectedIndex = 0;
   document.getElementById('data').value = new Date().toLocaleDateString('pt-BR');
   try{ localStorage.removeItem('rascunhoRec'); }catch(e){}
   mostrarStatus('Nova contagem');
@@ -881,15 +886,9 @@ function compartilharA4(){
 
 montar();
 ['localidade','tipo'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{ sujo = true; rascunhoLocal(); }));
-// retomar contagem que ficou aberta neste aparelho
-(async()=>{
-  let r=null; try{ r=JSON.parse(localStorage.getItem('rascunhoRec')||'null'); }catch(e){}
-  if(!r || !r.valores || !Object.values(r.valores).some(n=>Number(n)>0)) return;
-  const ok = await perguntar({titulo:'Continuar a contagem?', texto:`Tem uma contagem de ${r.data} (${r.localidade} – ${r.tipo}) aberta neste aparelho.`, ok:'Continuar', cancelar:'Começar nova'});
-  if(ok===null) return;
-  if(ok) carregarNoFormulario(r, {manterSujo:true}); else novaContagem();
-})();
-if('serviceWorker' in navigator && !MODO_TESTE) navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* sem rascunho: app fechado = começa limpo (minimizado continua igual) */
+try{ localStorage.removeItem('rascunhoRec'); }catch(e){}
+if('serviceWorker' in navigator && !MODO_TESTE) navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).catch(()=>{});
 </script>
 </body>
 </html>
