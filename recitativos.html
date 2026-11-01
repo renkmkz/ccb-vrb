@@ -216,7 +216,7 @@
 
 <script>
 /* versão desta tela: subir a cada mudança (aparece no topo e no rodapé da tela inicial do app) */
-const VERSAO = '1.5';
+const VERSAO = '1.6';
 
 /* ================= CONFIGURAÇÃO (edite aqui) ================= */
 const LOCALIDADES = ['Vila Rio Branco'];
@@ -724,8 +724,9 @@ function quebrar(ctx, texto, larg){
 function desenharResultado(reg){
   const c=calcular(reg.valores), t=textos(reg), val=reg.valores;
   const W=1080, P=56, F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
-  const cv=document.createElement('canvas'); cv.width=W; cv.height=4000;
-  const x=cv.getContext('2d');
+  const ESC=2;   /* desenha com o dobro de pixels (imagem mais nítida no WhatsApp) */
+  const cv=document.createElement('canvas'); cv.width=W*ESC; cv.height=4000*ESC;
+  const x=cv.getContext('2d'); x.scale(ESC,ESC);
   const rr=(X,Y,w,h,r,cor)=>{ x.fillStyle=cor; x.beginPath(); x.roundRect(X,Y,w,h,r); x.fill(); };
   const txt=(s,X,Y,tam,cor,peso='400',al='left')=>{ x.font=`${peso} ${tam}px ${F}`; x.fillStyle=cor; x.textAlign=al; x.fillText(s,X,Y); };
   x.fillStyle='#eef4f1'; x.fillRect(0,0,W,4000);
@@ -756,13 +757,14 @@ function desenharResultado(reg){
   // famílias com rosca
   const fh=60+Math.max(300, c.fam.length*60+50); rr(P,y,W-2*P,fh,24,'#ffffff');
   txt('RECITATIVOS POR GRUPO',P+36,y+56,26,'#5f716a','700');
-  const cx=P+36+125, cy=y+210, R=110;
-  x.lineWidth=46; x.strokeStyle='#e6eeea'; x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
+  /* rosca menor (v. pedido): raio 75, centrada na altura da legenda */
+  const R=75, cx=P+36+R+15, cy=y+110+(c.fam.length-1)*30;
+  x.lineWidth=30; x.strokeStyle='#e6eeea'; x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
   let a=-Math.PI/2;
   c.fam.forEach(f=>{ if(!c.instrumentos||!f.total) return; const d=f.total/c.instrumentos*Math.PI*2;
     x.strokeStyle=f.hex; x.beginPath(); x.arc(cx,cy,R,a,a+d); x.stroke(); a+=d; });
-  txt(String(c.instrumentos),cx,cy+14,48,'#1d2b26','800','center');
-  const lx=cx+R+70; let ly=y+120;
+  txt(String(c.instrumentos),cx,cy+13,38,'#1d2b26','800','center');
+  const lx=cx+R+60; let ly=y+120;
   c.fam.forEach(f=>{ const pc=c.instrumentos?(f.total/c.instrumentos*100).toFixed(2).replace('.',','):'0,00';
     x.fillStyle=f.hex; x.beginPath(); x.arc(lx,ly-10,12,0,Math.PI*2); x.fill();
     txt(f.nome,lx+28,ly,32,'#1d2b26','600'); txt(`${f.total} · ${pc}%`,W-P-36,ly,32,'#1d2b26','700','right'); ly+=60; });
@@ -786,7 +788,7 @@ function desenharResultado(reg){
   txt('Contagem de Recitativos',W/2,y+20,24,'#8a9a94','500','center');
   y+=50;
 
-  const out=document.createElement('canvas'); out.width=W; out.height=y;
+  const out=document.createElement('canvas'); out.width=W*ESC; out.height=Math.ceil(y*ESC);
   out.getContext('2d').drawImage(cv,0,0);
   return out;
 }
@@ -801,8 +803,9 @@ function compartilharImagem(){
 function desenharA4(reg){
   const c=calcular(reg.valores), t=textos(reg), val=reg.valores;
   const W=1240, H=1754, M=70, F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
-  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
-  const x=cv.getContext('2d');
+  const ESC=2;   /* dobro de pixels: folha A4 nítida para imprimir e no WhatsApp */
+  const cv=document.createElement('canvas'); cv.width=W*ESC; cv.height=H*ESC;
+  const x=cv.getContext('2d'); x.scale(ESC,ESC);
   const txt=(s,X,Y,tam,cor,peso='400',al='left')=>{ x.font=`${peso} ${tam}px ${F}`; x.fillStyle=cor; x.textAlign=al; x.fillText(String(s),X,Y); };
   const caixa=(X,Y,w,h,borda,fundo,r=14,lw=2)=>{ x.beginPath(); x.roundRect(X,Y,w,h,r); if(fundo){x.fillStyle=fundo;x.fill();} if(borda){x.lineWidth=lw;x.strokeStyle=borda;x.stroke();} };
   const linhaH=(X1,X2,Y,cor,lw=1)=>{ x.strokeStyle=cor; x.lineWidth=lw; x.beginPath(); x.moveTo(X1,Y); x.lineTo(X2,Y); x.stroke(); };
