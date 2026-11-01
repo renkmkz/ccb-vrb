@@ -219,7 +219,7 @@
 
 <script>
 /* versão desta tela: subir a cada mudança (aparece no topo e no rodapé da tela inicial do app) */
-const VERSAO = '1.7';
+const VERSAO = '1.8';
 
 /* ================= CONFIGURAÇÃO (edite aqui) ================= */
 const LOCALIDADES = ['Vila Rio Branco','Vila Diva','Água Rasa'];          // onde é o ensaio
@@ -742,8 +742,9 @@ function quebrar(ctx, texto, larg){
 function desenharResultado(reg){
   const c=calcular(reg.valores), t=textos(reg), val=reg.valores;
   const W=1080, P=56, F='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
-  const cv=document.createElement('canvas'); cv.width=W; cv.height=4000;
-  const x=cv.getContext('2d');
+  const ESC=2;   /* desenha com o dobro de pixels (imagem mais nítida no WhatsApp) */
+  const cv=document.createElement('canvas'); cv.width=W*ESC; cv.height=4000*ESC;
+  const x=cv.getContext('2d'); x.scale(ESC,ESC);
   const rr=(X,Y,w,h,r,cor)=>{ x.fillStyle=cor; x.beginPath(); x.roundRect(X,Y,w,h,r); x.fill(); };
   const txt=(s,X,Y,tam,cor,peso='400',al='left')=>{ x.font=`${peso} ${tam}px ${F}`; x.fillStyle=cor; x.textAlign=al; x.fillText(s,X,Y); };
   x.fillStyle='#eef4f1'; x.fillRect(0,0,W,4000);
@@ -829,7 +830,7 @@ function desenharResultado(reg){
   txt('Contagem do Ensaio',W/2,y+20,24,'#8a9a94','500','center');
   y+=50;
 
-  const out=document.createElement('canvas'); out.width=W; out.height=y;
+  const out=document.createElement('canvas'); out.width=W*ESC; out.height=Math.ceil(y*ESC);
   out.getContext('2d').drawImage(cv,0,0);
   return out;
 }
