@@ -38,6 +38,9 @@
   .ctr{display:flex;align-items:center;gap:6px;flex:none}
   .ctr button{width:38px;height:38px;border-radius:50%;border:1px solid #d5e2dc;background:#f6faf8;font-size:20px;font-weight:700;color:#1f6f5c;cursor:pointer;line-height:1}
   .ctr button:active{background:#1f6f5c;color:#fff}
+  .ctr .dif{min-width:28px;text-align:right;font-size:14px;font-weight:700;color:#1f6f5c}
+  .ctr .dif.menos{color:#c0392b}
+  .ctr .dif:empty{display:none}
   .ctr input{width:54px;height:38px;text-align:center;font-size:17px;font-weight:700;border:1px solid #d5e2dc;border-radius:8px}
   .det{padding:0 0 8px}
   .det:empty{display:none}
@@ -224,7 +227,7 @@
 
 <script>
 /* versão desta tela: subir a cada mudança (aparece no topo e no rodapé da tela inicial do app) */
-const VERSAO = '2.0';
+const VERSAO = '2.1';
 
 /* ================= CONFIGURAÇÃO (edite aqui) ================= */
 const LOCALIDADES = ['Vila Rio Branco','Vila Diva','Água Rasa'];          // onde é o ensaio
@@ -291,6 +294,7 @@ function linha(k, label, o={}){
   return `<div class="row${o.first?' first':''}" data-row="${esc(k)}">
       <span class="nm">${esc(label)}${o.sub?`<small>${esc(o.sub)}</small>`:''}</span>
       <div class="ctr">
+        ${o.tipo?'':`<span class="dif" data-dif="${esc(k)}"></span>`}
         <button type="button" data-k="${esc(k)}" data-d="-1" aria-label="Menos">−</button>
         <input inputmode="numeric" data-k="${esc(k)}" value="0">
         <button type="button" data-k="${esc(k)}" data-d="1" aria-label="Mais">+</button>
@@ -338,6 +342,7 @@ function definir(k, n, digitando){
   const inp = row.querySelector('input');
   if(!digitando || String(n)!==inp.value) inp.value = n;
   row.classList.toggle('has', n>0);
+  mostrarDif(k, row);
   FAMILIAS.forEach(f => document.querySelector(`[data-fam="${f.id}"]`).textContent = f.itens.reduce((s,i)=>s+v[i],0));
   if(meta[k].tipo) detalhes(k);
   rascunhoLocal();
@@ -415,6 +420,7 @@ async function limpar(){
   novaContagem();
 }
 function novaContagem(){
+  base = null;
   carregando = true;
   Object.keys(v).forEach(k=>{det[k]=[];definir(k,0)});
   carregando = false;
@@ -566,7 +572,7 @@ function salvarAndamento(forcar){
     res=>{ btn.disabled=false; btn.textContent='Salvar em andamento';
           if(res && res.conflito){ tratarConflito(res.atual, ()=>salvarAndamento(true)); return; }
           if(res && res.emAndamento){ jaEmAndamento(res.atual); return; }
-          versaoBase = (res && res.versao) || versaoBase; sujo = false; rascunhoLocal();
+          versaoBase = (res && res.versao) || versaoBase; sujo = false; marcarBase(); rascunhoLocal();
           mostrarStatus(`<b>✓ Salvo em andamento às ${hora()}</b> – os outros celulares nesta contagem recebem a atualização.`); },
     e =>{ btn.disabled=false; btn.textContent='Salvar em andamento';
           perguntar({titulo:'Não foi possível salvar', texto:(e&&e.message)||String(e), ok:'OK', cancelar:'Fechar'}); });
@@ -587,6 +593,7 @@ function carregarNoFormulario(reg, op={}){
   });
   atualizarVisAuto();
   carregando = false;
+  marcarBase();
   atualId = reg.id || novoId();
   versaoBase = reg.versao || reg.baseVersao || null;
   sujo = !!op.manterSujo && !!reg.sujo;
@@ -598,6 +605,38 @@ function carregarNoFormulario(reg, op={}){
 }
 
 /* ---------- vários celulares na mesma contagem ---------- */
+/* ---------- +N do lado do contador (quanto você mudou nesta vez) ---------- */
+/* Só nos contadores de recitativos/instrumentos/organistas/irmandade (o Ministério e as localidades visitantes não têm +N).
+   base = os números de quando a contagem foi aberta, puxada ou salva por último.
+   Ao lado do − aparece a diferença (ex.: +2). Sem número = não mexeu nesse campo. */
+let base = null;
+function nomeCampo(k){
+  if(k.startsWith('ML:')) return 'Min. Local – ' + meta[k].label;
+  if(k.startsWith('MV:')) return 'Min. Visita – ' + meta[k].label;
+  if(k==='Visitantes') return 'Localidades visitantes';
+  return meta[k].label;
+}
+const difDe = k => v[k] - (base ? (Number(base[k])||0) : 0);
+const difTexto = d => d>0 ? '+'+d : '−'+(-d);
+function mostrarDif(k, row){
+  row = row || document.querySelector(`[data-row="${CSS.escape(k)}"]`);
+  const el = row && row.querySelector('.dif');
+  if(!el) return;
+  const d = base ? difDe(k) : 0;
+  el.textContent = d ? difTexto(d) : '';
+  el.classList.toggle('menos', d<0);
+}
+function marcarBase(){ base = {...v}; Object.keys(v).forEach(k=>mostrarDif(k)); }
+/* lista do que este celular mudou e ainda não salvou (ex.: "Crianças: +2") */
+function mudancasNaoSalvas(){
+  return Object.keys(v).filter(k=>!meta[k].tipo && difDe(k)!==0).map(k=>`${nomeCampo(k)}: ${difTexto(difDe(k))}`);
+}
+/* carrega a versão de quem salvou primeiro e mostra o que se perdeu daqui */
+function puxarMaisNova(atual, perdidas){
+  perdidas = perdidas || mudancasNaoSalvas();
+  carregarNoFormulario(atual, {msg:`🔄 Versão mais nova carregada (salva às ${esc(atual.horaVersao||'')}).` +
+    (perdidas.length ? `<br><small>O que você tinha mudado e não foi salvo: <b>${perdidas.map(esc).join(' · ')}</b>. Coloque de novo se ainda precisar.</small>` : '')});
+}
 function tratarConflito(atual, refazer){
   if(atual.status==='Finalizado' && !(editandoFinal && editavelHoje(atual))){
     const outroDia = !editavelHoje(atual);
@@ -607,25 +646,26 @@ function tratarConflito(atual, refazer){
       .then(ok=>{ novaContagem(); if(ok){ mostrar(atual); document.getElementById('msg').innerHTML=''; aba('res'); } });
     return;
   }
-  perguntar({titulo:'Outra pessoa salvou antes', texto:`Esta contagem foi atualizada em outro celular às ${atual.horaVersao||''}. O que você quer fazer?`,
-             ok:'Puxar a versão mais nova', cancelar:'Salvar a minha por cima'})
-    .then(ok=>{
-      if(ok===null) return;
-      if(ok) carregarNoFormulario(atual, {msg:`🔄 Versão mais nova carregada (salva às ${atual.horaVersao||''}).`});
-      else refazer();
-    });
+  /* quem salvou primeiro vale: não existe mais "salvar a minha por cima" */
+  const perdidas = mudancasNaoSalvas();
+  perguntar({titulo:'Outra pessoa salvou antes',
+             texto:`Esta contagem foi atualizada em outro celular às ${atual.horaVersao||''}. Quem salvou primeiro vale: vamos carregar a versão mais nova.` + (perdidas.length ? ' O que você tinha mudado aqui (coloque de novo depois, se precisar):' : ''),
+             lista:perdidas, ok:'Carregar a versão mais nova', cancelar:'Agora não'})
+    .then(ok=>{ if(ok) puxarMaisNova(atual, perdidas); });
 }
 
 /* outra pessoa já salvou uma contagem em andamento neste dia: não deixa criar outra, abre a que existe */
 function jaEmAndamento(atual){
+  const lst = mudancasNaoSalvas();
   const h = atual.horaVersao ? ' (às '+atual.horaVersao+')' : '';
   mostrarStatus(`⚠️ <b>Já está em andamento</b> uma contagem de ${esc(atual.data||'')}. Verifique o Histórico.`);
   perguntar({titulo:'Já está em andamento',
-             texto:`Outra pessoa já salvou a contagem de ${atual.data||'hoje'}${h}. Não dá para salvar outra no mesmo dia enquanto ela não for finalizada. Vamos abrir a que está em andamento – o que você digitou aqui será descartado.`,
+             texto:`Outra pessoa já salvou a contagem de ${atual.data||'hoje'}${h}. Não dá para salvar outra no mesmo dia enquanto ela não for finalizada. Vamos abrir a que está em andamento – o que você digitou aqui será descartado.` + (lst.length ? ' O que você tinha contado aqui:' : ''),
+             lista:lst,
              ok:'Abrir a contagem em andamento', cancelar:'Ver o Histórico'})
     .then(ok=>{
       if(ok===null) return;
-      if(ok) carregarNoFormulario(atual, {msg:`📂 Abrimos a contagem em andamento de <b>${esc(atual.data||'')}</b>${esc(h)}. Continue por aqui.`});
+      if(ok) carregarNoFormulario(atual, {msg:`📂 Abrimos a contagem em andamento de <b>${esc(atual.data||'')}</b>${esc(h)}. Continue por aqui.` + (lst.length ? `<br><small>O que você tinha contado no seu celular: <b>${lst.map(esc).join(' · ')}</b>. Confira e coloque o que faltar.</small>` : '')});
       else aba('hist');
     });
 }
@@ -642,7 +682,7 @@ function checarAtualizacao(){
       carregarNoFormulario(r, {ficarNaAba:true, msg:`🔄 Atualizado com as mudanças de outro celular (salvas às ${r.horaVersao||''}).`});
     } else {
       window._maisNova = r;
-      mostrarStatus(`⚠️ Outra pessoa salvou mudanças às ${esc(r.horaVersao||'')}. <button class="mini" onclick="carregarNoFormulario(window._maisNova,{msg:'🔄 Versão mais nova carregada.'})">Puxar atualização</button><br><small>Se puxar, o que você mudou e ainda não salvou aqui se perde.</small>`);
+      mostrarStatus(`⚠️ Outra pessoa salvou mudanças às ${esc(r.horaVersao||'')}. <button class="mini" onclick="puxarMaisNova(window._maisNova)">Puxar atualização</button><br><small>Puxe antes de salvar (quem salvou primeiro vale). O que você mudou aparece aqui embaixo para colocar de novo.</small>`);
     }
   }).obterEnsaio(atualId);
 }
