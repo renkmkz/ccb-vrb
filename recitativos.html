@@ -168,6 +168,11 @@
       <div class="meta" id="resMeta"></div>
       <div class="tot" id="resTot"></div>
     </div>
+    <div class="card share hidden" id="editarBox">
+      <button class="sbtn img" onclick="editarFinalizada()">
+        <span class="ic">✏️</span><span><b>Editar esta contagem</b><small>Só dá para editar no mesmo dia da contagem</small></span>
+      </button>
+    </div>
     <div class="card">
       <h2>Recitativos por grupo</h2>
       <div class="chartwrap">
@@ -211,12 +216,12 @@
 <div class="bar" id="barNovo">
   <button class="ghost" onclick="limpar()">Limpar campos</button>
   <button class="mid" id="btnAndamento" onclick="salvarAndamento()">Salvar em andamento</button>
-  <button class="primary" onclick="gerar()">Gerar resultado</button>
+  <button class="primary" id="btnGerar" onclick="gerar()">Gerar resultado</button>
 </div>
 
 <script>
 /* versão desta tela: subir a cada mudança (aparece no topo e no rodapé da tela inicial do app) */
-const VERSAO = '1.6';
+const VERSAO = '1.7';
 
 /* ================= CONFIGURAÇÃO (edite aqui) ================= */
 const LOCALIDADES = ['Vila Rio Branco'];
@@ -410,6 +415,7 @@ function novaContagem(){
   Object.keys(v).forEach(k=>{det[k]=[];definir(k,0)});
   carregando = false;
   atualId = null; versaoBase = null; sujo = false;
+  editandoFinal = false; aplicarModoEdicao();
   document.getElementById('localidade').selectedIndex = 0;
   document.getElementById('tipo').selectedIndex = 0;
   document.getElementById('data').value = new Date().toLocaleDateString('pt-BR');
@@ -450,6 +456,7 @@ function textos(reg){
 /* ---------- resultado ---------- */
 function mostrar(reg){
   window._atual = reg;
+  document.getElementById('editarBox').classList.toggle('hidden', !editavelHoje(reg));
   const c = calcular(reg.valores), val = reg.valores, t = textos(reg);
   document.getElementById('resMeta').innerHTML = `<b>${esc(reg.localidade)}</b> · ${esc(reg.tipo)} · ${esc(reg.data)}`;
   document.getElementById('resTot').innerHTML = [
@@ -479,9 +486,25 @@ function mostrar(reg){
 
 /* ---------- contagem em andamento / edição ---------- */
 let atualId = null, carregando = false;
+let editandoFinal = false;   /* true = está editando uma contagem já finalizada (só vale no dia dela) */
 let versaoBase = null, sujo = false;   /* versão da planilha que este celular tem / se mexeu desde a última sincronização */
 const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const hora = () => new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+const hojeBR = () => new Date().toLocaleDateString('pt-BR');
+/* contagem finalizada e do dia de hoje = pode ser editada */
+const editavelHoje = r => !!r && r.status==='Finalizado' && r.data===hojeBR();
+function aplicarModoEdicao(){
+  document.getElementById('btnAndamento').classList.toggle('hidden', editandoFinal);
+  document.getElementById('btnGerar').textContent = editandoFinal ? 'Salvar alterações' : 'Gerar resultado';
+}
+function editarFinalizada(){
+  const r = window._atual;
+  if(!editavelHoje(r)){
+    perguntar({titulo:'Não dá para editar', texto:'Só dá para editar contagens finalizadas do dia de hoje.', ok:'OK', cancelar:'Fechar'});
+    return;
+  }
+  carregarNoFormulario(r, {msg:`✏️ Editando a contagem de <b>${esc(r.data)}</b> <span class="badge">finalizada</span><br><small>Mude o que precisar e toque em “Salvar alterações”.</small>`});
+}
 function mostrarStatus(html){ document.getElementById('status').innerHTML = html; }
 
 function montarRegistro(status){
@@ -494,6 +517,7 @@ function montarRegistro(status){
   };
   if(!atualId) atualId = novoId();
   reg.id = atualId; reg.status = status; reg.baseVersao = versaoBase;
+  if(editandoFinal) reg.editandoFinal = true;
   const c = calcular(reg.valores), t = textos(reg);
   reg.totais = {recitativos:c.recitativos, ministerio:c.ministerio};
 
@@ -549,6 +573,7 @@ function carregarNoFormulario(reg, op={}){
   atualId = reg.id || novoId();
   versaoBase = reg.versao || reg.baseVersao || null;
   sujo = !!op.manterSujo && !!reg.sujo;
+  editandoFinal = editavelHoje(reg); aplicarModoEdicao();
   mostrarStatus(op.msg || `Continuando a contagem de <b>${esc(reg.data)}</b> <span class="badge">em andamento</span>`);
   rascunhoLocal();
   if(!op.ficarNaAba) aba('novo');
@@ -557,8 +582,11 @@ function carregarNoFormulario(reg, op={}){
 
 /* ---------- vários celulares na mesma contagem ---------- */
 function tratarConflito(atual, refazer){
-  if(atual.status==='Finalizado'){
-    perguntar({titulo:'Esta contagem já foi finalizada', texto:'Outra pessoa gerou o resultado em outro celular. Ela não pode mais ser alterada.', ok:'Ver o resultado', cancelar:'Fechar'})
+  if(atual.status==='Finalizado' && !(editandoFinal && editavelHoje(atual))){
+    const outroDia = !editavelHoje(atual);
+    perguntar({titulo:'Esta contagem já foi finalizada',
+               texto: outroDia ? 'Esta contagem é de outro dia e não pode mais ser alterada.' : 'Outra pessoa gerou o resultado em outro celular. Para mudar algo, abra o resultado e toque em “Editar esta contagem” (só vale no mesmo dia).',
+               ok:'Ver o resultado', cancelar:'Fechar'})
       .then(ok=>{ novaContagem(); if(ok){ mostrar(atual); document.getElementById('msg').innerHTML=''; aba('res'); } });
     return;
   }
@@ -591,7 +619,7 @@ function checarAtualizacao(){
   servidor().withFailureHandler(()=>{ checando=false; }).withSuccessHandler(r=>{
     checando = false;
     if(!r || !r.versao || r.versao <= versaoBase) return;
-    if(r.status==='Finalizado'){ tratarConflito(r); return; }
+    if(r.status==='Finalizado' && !(editandoFinal && editavelHoje(r))){ tratarConflito(r); return; }
     if(!sujo){
       carregarNoFormulario(r, {ficarNaAba:true, msg:`🔄 Atualizado com as mudanças de outro celular (salvas às ${r.horaVersao||''}).`});
     } else {
@@ -616,17 +644,21 @@ async function gerar(forcar){
   }
 
   if(forcar!==true){
-  const fim = await perguntar({titulo:'Gerar o resultado final?', texto:'Depois de gerar, esta contagem fica fechada e não pode mais ser alterada. Se ainda vai chegar gente, use "Salvar em andamento".', ok:'Gerar resultado', cancelar:'Voltar'});
+  const fim = await perguntar(editandoFinal
+    ? {titulo:'Salvar as alterações?', texto:'O resultado desta contagem será atualizado na planilha.', ok:'Salvar alterações', cancelar:'Voltar'}
+    : {titulo:'Gerar o resultado final?', texto:'Depois de gerar, esta contagem só poderá ser editada no mesmo dia (pelo Histórico). Se ainda vai chegar gente, use "Salvar em andamento".', ok:'Gerar resultado', cancelar:'Voltar'});
   if(!fim) return;
   }
   const reg = montarRegistro('Finalizado');
+  const eraEdicao = editandoFinal;
   if(forcar===true) reg.forcar = true;
   mostrarStatus('Salvando o resultado…');
   salvar(reg,
     res=>{ if(res && res.conflito){ tratarConflito(res.atual, ()=>gerar(true)); return; }
            if(res && res.emAndamento){ jaEmAndamento(res.atual); return; }
+           reg.versao = (res && res.versao) || reg.versao;
            ultimo = reg; mostrar(reg); aba('res');
-           document.getElementById('msg').innerHTML = `<div class="msg ok">Resultado salvo ${temGoogle?'na planilha':'(modo teste, só neste navegador)'} e finalizado.</div>`;
+           document.getElementById('msg').innerHTML = `<div class="msg ok">${eraEdicao?'Alterações salvas':'Resultado salvo'} ${temGoogle?'na planilha':'(modo teste, só neste navegador)'}${eraEdicao?'.':' e finalizado.'}</div>`;
            novaContagem(); },
     e => perguntar({titulo:'Não foi possível salvar', texto:(e&&e.message)||String(e), ok:'OK', cancelar:'Fechar'}));
 }
@@ -635,6 +667,8 @@ async function gerar(forcar){
 function salvar(reg, ok, err){
   if(temGoogle){ servidor().withSuccessHandler(ok).withFailureHandler(err).salvarEnsaio(reg); return; }
   try{ const todos=JSON.parse(localStorage.getItem('recitativos')||'[]');
+    const ex=todos.find(x=>x.id===reg.id);
+    if(ex && ex.status==='Finalizado' && !(reg.editandoFinal && ex.data===hojeBR())){ ok({conflito:true, atual:ex}); return; }
     if(!todos.some(x=>x.id===reg.id)){ const ab=todos.find(x=>x.status==='Em andamento' && x.data===reg.data); if(ab){ ok({emAndamento:true, atual:ab}); return; } }
     const h=todos.filter(x=>x.id!==reg.id); reg.versao=Date.now(); h.unshift(reg); localStorage.setItem('recitativos',JSON.stringify(h.slice(0,100))); ok({id:reg.id, versao:reg.versao}); }catch(e){ err(e); }
 }
@@ -647,7 +681,7 @@ function carregarHistorico(){
     box.innerHTML = `<table><thead><tr><th>Data</th><th>Localidade</th><th>Culto</th><th style="text-align:right">Recit.</th><th style="text-align:right">Minist.</th></tr></thead><tbody>` +
       lista.map((r,i)=>{ const c=calcular(r.valores); return `<tr onclick="abrirHist(${i})"><td>${esc(r.data)}${r.status==='Em andamento'?'<br><span class="badge">em andamento</span>':''}</td><td>${esc(r.localidade)}</td><td>${esc(r.tipo)}</td>
         <td class="n"><b>${c.recitativos}</b></td><td class="n">${c.ministerio}</td></tr>`; }).join('') +
-      `</tbody></table><p class="meta" style="margin-top:8px">Toque em uma contagem <b>em andamento</b> para continuar. As finalizadas abrem só para ver o resultado.</p>`;
+      `</tbody></table><p class="meta" style="margin-top:8px">Toque em uma contagem <b>em andamento</b> para continuar. As finalizadas abrem o resultado; as <b>de hoje</b> podem ser editadas por lá.</p>`;
   };
   if(temGoogle) servidor().withSuccessHandler(render).withFailureHandler(e=>box.textContent='Erro ao carregar: '+e.message).listarEnsaios();
   else { try{ render(JSON.parse(localStorage.getItem('recitativos')||'[]')); }catch(e){ render([]); } }
